@@ -142,7 +142,7 @@
 | slash-command-learn `[ready]` | /rig:learn 把踩坑沉淀成 lesson 并按三级进化（lesson→pattern→晋升）补"越用越聪明"环 | ls commands/rig/*.md grep -i learn | template-copy | 新增 learn.md：捕获进 docs/lessons.md（不注入）；晋升 A 桶进 lint-one、B 桶进 conventions，复用现有机制不加 hook，每级人工确认 | true |
 | slash-command-review `[ready]` | /rig:review 收尾触发 code-reviewer 子 agent 做遵守度/偏离度/完成度语义复核 | ls commands/rig/*.md grep -i review | template-copy | 新增 review.md 调用 code-reviewer 子 agent | true |
 | slash-command-rig-init `[ready]` | 全局 /rig:init —— 任意项目接入 rig 的入口(检测→装缺机制→铺骨架→交 AI 判断)；scope=global | test -f ~/.claude/commands/rig/init.md | template-copy | bootstrap 拷 assets/dotfiles-layer/commands/* → ~/.claude/commands/ | true |
-| slash-command-rig-doctor `[ready]` | 全局 /rig:doctor —— 对当前项目跑自检(verify.sh)；scope=global | test -f ~/.claude/commands/rig/doctor.md | template-copy | 同上(bootstrap 装全局命令) | true |
+| slash-command-rig-doctor `[ready]` | 全局 /rig:doctor —— 自检(verify.sh) + 诊断 ✗ 根因并列修复动作(经确认后修)；scope=global | test -f ~/.claude/commands/rig/doctor.md | template-copy | 同上(bootstrap 装全局命令) | true |
 
 ---
 
