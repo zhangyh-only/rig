@@ -29,7 +29,7 @@ rig doctor        # 装好后自检
 - 2 个子 agent：`code-reviewer`（收尾语义复核 + honesty gap）、`spec-author`
 
 **项目内容**（每个项目一份）
-- `AGENTS.md`（地图 + 基线 + 指针）· `docs/conventions/`（规范三桶 A/B/C）· `scripts/lint-one.sh`（语言适配器）· `scripts/verify-local.sh`（L0 自验证）· 项目命令 `/new-change` `/archive-change` `/adr` `/feature-spec` `/review` `/learn`（后续归口 `/rig:*`）· openspec / ADR 模板
+- `AGENTS.md`（地图 + 基线 + 指针）· `docs/conventions/`（规范三桶 A/B/C）· `scripts/lint-one.sh`（语言适配器）· `scripts/verify-local.sh`（L0 自验证）· 项目命令 `/rig:new-change` `/rig:archive-change` `/rig:adr` `/rig:feature-spec` `/rig:review` `/rig:learn`（全局 `/rig:init` `/rig:doctor` 装一次即全项目可用）· openspec / ADR 模板
 
 ## 三道闸 + 兜底
 

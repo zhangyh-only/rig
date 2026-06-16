@@ -54,7 +54,7 @@
 | conflict-precedence-resolver | 多来源规范冲突裁决（项目>全局、canonical>派生、新>旧），归并遇矛盾不静默并列 | 归并时检测同主题矛盾 | author-with-user | 定优先级裁决表；冲突项标记让用户裁决，落 canonical 后派生物重生成 | false |
 | detect-source-registry-extensible `[ready]` | 既有规则"探测源"做成可追加数组而非硬编码列举 | 本文件类别 R 的 rule-sources 即此数组 | author-with-user | 新工具只追加一行；探测=遍历该数组 | true |
 | tool-adapter-registry `[ready]` | 工具适配表：每个已装工具如何消费 canonical | detect-env.sh 列 ~/.claude ~/.codex ~/.cursor + which copilot | author-with-user | 见类别 R 各 *-adapter 条目；引擎遍历已装工具逐个适配 | true |
-| installer-self-bootstrap-into-skills `[ready]` | 安装器本体进 skills 同步源并软链，新设备可发现（尊重 cc-switch 写源不直写 ~/.claude/skills） | ls ~/.claude/skills/rig 与 ~/.cc-switch/skills/同名 皆无→absent | organize-existing | 移入同步源建软链；纳入 dotfiles bootstrap 首步 | false |
+| installer-self-bootstrap-into-skills `[ready]` | rig skill 注册进工具 skills 目录(Claude=~/.claude/skills/rig)，AI 可发现可调用 | test -L ~/.claude/skills/rig（缺则 absent） | organize-existing | bootstrap 直接软链 ~/.claude/skills/rig 指向克隆目录(不走 cc-switch) | false |
 | installer-golden-fixture-test `[declared]` | 安装器自身回归测试：golden 夹具跑全流程+两遍幂等断言 | skill 下有 test/fixtures + run-on-fixture.sh | template-copy | 对空项目/已有.cursorrules/已有AGENTS/多语言 monorepo 夹具断言终态且二次无 diff（注：运行时 hook 链路的确定性评分部分已由 repo 根 `eval-demo.sh` 覆盖；本项余下范围=安装器幂等夹具，仍 declared） | true |
 | backup-retention-and-restore `[ready]` | 带时间戳多层备份+restore；覆盖前 hash 比对 | 有 backups/<ts>/ + restore | template-copy | 写 ~/.claude/backups/<ts>/；覆盖前 hash 比对，有用户改动则提示 | true |
 
@@ -84,7 +84,7 @@
 | python-go-runtime | Python/Go 运行时及各自 linter（按 pyproject/go.mod 适用） | command -v python3/go；有 pyproject/go.mod 才要求 | install-command | brew/官方安装；不需要的语言不报缺 | false |
 | openspec-cli-available | openspec CLI（archive/validate/list 前提） | npx --no-install openspec --version \|\| command -v openspec | install-command | npm i -g openspec 或确保 npx 可联网 | false |
 | codex-prereq-install | Codex CLI/App + ~/.codex（仅当适配 Codex 时） | which codex \|\| ls /Applications/Codex.app；test -d ~/.codex | install-command | brew/官方安装 + 首次登录；auth.json 不进同步 | true |
-| skill-sync-mechanism `[ready]` | skills 同步机制（本机 cc-switch），新机未装则软链全悬空 | ls -la ~/.claude/skills/ \| grep '\->'；ls ~/.cc-switch/skills；grep skillSyncMethod | install-command | 前置加 cc-switch 安装与首次同步；**写 skills 走同步源不直写 ~/.claude/skills** | false |
+| skill-sync-mechanism `[ready]` | skills 落地位置(默认工具自带目录 ~/.claude/skills;若用 cc-switch 等同步器才写同步源) | ls -la ~/.claude/skills/ \| grep '\->'；ls ~/.cc-switch/skills；grep skillSyncMethod | install-command | 默认直接装进 ~/.claude/skills(Claude);仅当该机确用 cc-switch 等同步器才改写同步源 | false |
 
 ---
 
@@ -135,12 +135,14 @@
 
 | id | what | detect | remediation_type | remediation | templatable |
 |---|---|---|---|---|---|
-| slash-command-new-change `[ready]` | /new-change 一键起 openspec change 脚手架 | ls commands/*.md grep -Ei 'change\|spec\|openspec' | template-copy | 新增 new-change.md | true |
-| slash-command-archive-change `[ready]` | /archive-change 合并 delta 进 specs 并提示毕业 ADR | ls commands/*.md grep -Ei 'archive' | template-copy | 新增 archive-change.md | true |
-| slash-command-write-adr `[ready]` | /adr 统一模板起 ADR | ls commands/*.md grep -i adr; test -d docs/adr | template-copy | 新增 adr.md + docs/adr 模板 | true |
-| slash-command-feature-spec `[ready]` | /feature-spec 显式触发 feature-spec skill | ls commands/*.md grep -i 'feature-spec' | template-copy | 新增 feature-spec.md 调用 skill | true |
-| slash-command-learn `[ready]` | /learn 把踩坑沉淀成 lesson 并按三级进化（lesson→pattern→晋升）补"越用越聪明"环 | ls commands/*.md grep -i learn | template-copy | 新增 learn.md：捕获进 docs/lessons.md（不注入）；晋升 A 桶进 lint-one、B 桶进 conventions，复用现有机制不加 hook，每级人工确认 | true |
-| slash-command-review `[ready]` | /review 收尾触发 code-reviewer 子 agent 做遵守度/偏离度/完成度语义复核 | ls commands/*.md grep -i review | template-copy | 新增 review.md 调用 code-reviewer 子 agent | true |
+| slash-command-new-change `[ready]` | /rig:new-change 一键起 openspec change 脚手架 | ls commands/rig/*.md grep -Ei 'change\|spec\|openspec' | template-copy | 新增 new-change.md | true |
+| slash-command-archive-change `[ready]` | /rig:archive-change 合并 delta 进 specs 并提示毕业 ADR | ls commands/rig/*.md grep -Ei 'archive' | template-copy | 新增 archive-change.md | true |
+| slash-command-write-adr `[ready]` | /rig:adr 统一模板起 ADR | ls commands/rig/*.md grep -i adr; test -d docs/adr | template-copy | 新增 adr.md + docs/adr 模板 | true |
+| slash-command-feature-spec `[ready]` | /rig:feature-spec 显式触发 feature-spec skill | ls commands/rig/*.md grep -i 'feature-spec' | template-copy | 新增 feature-spec.md 调用 skill | true |
+| slash-command-learn `[ready]` | /rig:learn 把踩坑沉淀成 lesson 并按三级进化（lesson→pattern→晋升）补"越用越聪明"环 | ls commands/rig/*.md grep -i learn | template-copy | 新增 learn.md：捕获进 docs/lessons.md（不注入）；晋升 A 桶进 lint-one、B 桶进 conventions，复用现有机制不加 hook，每级人工确认 | true |
+| slash-command-review `[ready]` | /rig:review 收尾触发 code-reviewer 子 agent 做遵守度/偏离度/完成度语义复核 | ls commands/rig/*.md grep -i review | template-copy | 新增 review.md 调用 code-reviewer 子 agent | true |
+| slash-command-rig-init `[ready]` | 全局 /rig:init —— 任意项目接入 rig 的入口(检测→装缺机制→铺骨架→交 AI 判断)；scope=global | test -f ~/.claude/commands/rig/init.md | template-copy | bootstrap 拷 assets/dotfiles-layer/commands/* → ~/.claude/commands/ | true |
+| slash-command-rig-doctor `[ready]` | 全局 /rig:doctor —— 对当前项目跑自检(verify.sh)；scope=global | test -f ~/.claude/commands/rig/doctor.md | template-copy | 同上(bootstrap 装全局命令) | true |
 
 ---
 
@@ -150,7 +152,7 @@
 |---|---|---|---|---|---|
 | superpowers-installed | superpowers 在 skills 可用且 enabled（L2 brainstorm/write-plan/execute-plan 的执行体；**外部依赖、本安装器不随包交付**） | jq enabledPlugins superpowers；ls skills/superpowers；核对 brainstorm/writing-plans/executing-plans 技能文件可达 | install-command | 单独 marketplace install；装后自测三段技能可触发，否则只验目录会 present 误报 | true |
 | feature-spec-skill-installed | feature-spec skill 可用（L3 后向沉淀执行体；迁移易漏） | ls skills/feature-spec/SKILL.md \|\| ~/.cc-switch/skills/ | install-command | 拷/装 feature-spec skill 目录 | true |
-| skill-symlink-integrity `[ready]` | 工作流必需 skill 软链有效且目标存在（迁移/同步未完成时全悬空） | for l in ~/.claude/skills/*; do [ -L "$l" ] && [ ! -e "$l" ] && echo DANGLING; done | organize-existing | 触发 cc-switch 同步补目标后重建链接；必需 skill 缺目标回退 template-copy 落实体 | false |
+| skill-symlink-integrity `[ready]` | 工作流必需 skill 软链有效且目标存在（迁移/同步未完成时全悬空） | for l in ~/.claude/skills/*; do [ -L "$l" ] && [ ! -e "$l" ] && echo DANGLING; done | organize-existing | 重建软链指向目标(rig 克隆或同步源)；必需 skill 缺目标回退 template-copy 落实体 | false |
 | codex-skill-registration | Codex 在 config.toml 用 [[skills.config]] 显式注册必需 skill（不自动扫描） | grep -A2 '\[\[skills.config\]\]' ~/.codex/config.toml 对照必需 skill | merge | 为每个必需 skill 幂等追加 [[skills.config]] 块 | true |
 | skills-cursor-parity | Cursor 侧 skill 等价物或文档化缺位 | ls ~/.cursor/skills-cursor 对照必需能力清单 | author-with-user | 评估哪些需在 Cursor 落地，无法复用的引导重建或接受降级 | false |
 

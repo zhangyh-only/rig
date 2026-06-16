@@ -39,7 +39,7 @@ description: 安装、迁移或更新这套"AI coding 分层工作流"（本地 
 按各自 `remediation_type` 分发，代表性动作：
 - `template-copy`：拷 `assets/dotfiles-layer/hooks/*.sh` → `~/.claude/hooks/` 并 `chmod +x`；拷 `conventions.md`（已存在则展示差异问合并，不覆盖个人内容）。
 - `merge`：`bash scripts/merge-settings.sh ~/.claude/settings.json assets/dotfiles-layer/settings.json`（幂等去重、留 .bak、不丢既有 permissions）。
-- `install-command`：按机器画像选包管理器（**别假定 brew**）；装/补 skill 走 cc-switch **同步源**，不直写 `~/.claude/skills` 软链目标（detect-env 已报是否 cc-switch、有无悬空软链）。
+- `install-command`：按机器画像选包管理器（**别假定 brew**）；装/补 skill 默认直接进工具自带 skills 目录(Claude=~/.claude/skills)；仅当该机用 cc-switch 等同步器才写同步源(detect-env 报告)。
 - 末尾固定提示：**hook 变更需开新会话生效**。
 
 ### 步骤 2 · 补救 project 项（遍历 manifest 中 scope=project）

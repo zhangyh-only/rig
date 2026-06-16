@@ -25,7 +25,7 @@ argument-hint: [change-id]（留空则取唯一进行中的 change）
 
 1. **跨域长期决策 → 毕业成 ADR**
    本次 change 里有没有"为什么这么定"的跨域 / 难回退决策（选型、边界、权衡）？
-   有的话用 `/adr` 把它毕业成正式 ADR——它是这类决策"为什么"的唯一权威，feature-spec 只会链接它、不复制。
+   有的话用 `/rig:adr` 把它毕业成正式 ADR——它是这类决策"为什么"的唯一权威，feature-spec 只会链接它、不复制。
 
 2. **代码稳定后 → 用 feature-spec 刷新受影响域**
    列出本次改动触及的业务域。提醒我：等代码稳定，用 feature-spec 扫代码把这些域的 `docs/feature-specs/<domain>.md` 刷新到与现状一致（后向沉淀，不是现在立刻做）。
