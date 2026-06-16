@@ -1,0 +1,8 @@
+# 受保护路径（可选）—— guard.sh 会拦住对这些路径的编辑。每行一个 glob，# 开头为注释。
+# 不放本文件时，guard.sh 用内置默认红线（generated / build / target / node_modules / dist）。
+*/generated/*
+*.g.*
+*/target/*
+*/build/*
+*/node_modules/*
+*/dist/*

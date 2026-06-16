@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+# rig —— 给 AI coding 供给纪律的分层 harness。
+# CLI 是"机械/确定性层"(检测、装全局机制、铺项目骨架、自检);
+# 判断性工作(归并既有规范、推导 AGENTS 地图、写 verify-local)由 AI 读 SKILL.md 完成。
+set -u
+SELF="$(cd "$(dirname "$0")/.." && pwd)"   # rig 包根
+cmd="${1:-help}"; [ "$#" -gt 0 ] && shift
+
+usage(){
+  cat <<EOF
+rig —— 给 AI coding 供给纪律的分层 harness
+
+用法:
+  rig init [--claude|--codex|--cursor] [项目目录]
+      检测 → 装全局机制(hooks/agents/settings,缺才装) → 铺项目骨架(幂等不覆盖)
+      判断性内容(归并既有规范 / 推导 AGENTS 地图 / 写 verify-local)交 AI 读 SKILL.md 完成
+  rig doctor [项目目录]
+      安装后自检:注入 / 红线拦 / 闸 / 失败降级
+  rig help
+
+包根:     $SELF
+设计文档: $SELF/docs/DESIGN.md
+安装细节: $SELF/docs/INSTALL.md
+EOF
+}
+
+scaffold_project(){
+  P="$1"
+  [ -f "$P/AGENTS.md" ] || cp "$SELF/assets/project-layer/AGENTS.md" "$P/AGENTS.md"
+  [ -f "$P/CLAUDE.md" ] || cp "$SELF/assets/project-layer/CLAUDE.md" "$P/CLAUDE.md"
+  mkdir -p "$P/scripts"; cp -n "$SELF"/assets/project-layer/scripts/*.sh "$P/scripts/" 2>/dev/null || true
+  chmod +x "$P/scripts/"*.sh 2>/dev/null || true
+  mkdir -p "$P/.claude"
+  cp -Rn "$SELF/assets/project-layer/.claude/commands" "$P/.claude/" 2>/dev/null || true
+  cp -n "$SELF/assets/project-layer/.claude/protected-paths.txt" "$P/.claude/" 2>/dev/null || true
+  mkdir -p "$P/docs"
+  for d in conventions adr plans; do cp -Rn "$SELF/assets/project-layer/docs/$d" "$P/docs/" 2>/dev/null || true; done
+  cp -n "$SELF/assets/project-layer/.editorconfig" "$P/" 2>/dev/null || true
+}
+
+case "$cmd" in
+  -h|--help|help|"") usage ;;
+  doctor) bash "$SELF/scripts/verify.sh" "${1:-$PWD}" ;;
+  init)
+    tool="claude"; proj="$PWD"
+    for a in "$@"; do case "$a" in
+      --claude) tool=claude ;; --codex) tool=codex ;; --cursor) tool=cursor ;;
+      --*) echo "未知选项: $a" >&2; exit 1 ;;
+      *) proj="$(cd "$a" 2>/dev/null && pwd || echo "$a")" ;;
+    esac; done
+    echo "== rig init · tool=$tool · project=$proj =="
+    echo; echo "-- 机器画像 --"; bash "$SELF/scripts/detect-env.sh" "$proj" | sed -n '1,12p'
+    echo; echo "-- 全局机制 --"
+    if [ "$tool" = "claude" ]; then
+      bash "$SELF/scripts/bootstrap.sh"
+    else
+      echo "⚠ 目前只有 Claude 的全局 hook 机制完整。$tool 仅落 canonical(AGENTS/conventions)+CI 兜底、门禁不强制——先把 claude 跑通,$tool 后续补。跳过全局机制安装。"
+    fi
+    echo; echo "-- 项目骨架(幂等,不覆盖既有) --"; scaffold_project "$proj"; echo "  骨架已就位(已存在的未动)"
+    echo; echo "-- 接下来交给 AI(读 SKILL.md 做判断性工作) --"
+    echo "  · 把既有规范(memory-bank/.cursorrules/…)归并进 docs/conventions 并打 A/B/C 三桶"
+    echo "  · 从 pom/package.json 推导回填 AGENTS.md 的项目地图(build/test/run)"
+    echo "  · 写 scripts/verify-local.sh 的真实命令(compile→test→smoke)"
+    echo "  · 完成后跑  rig doctor  自检"
+    echo; echo "提示:hook 变更需开新会话生效。"
+    ;;
+  *) echo "未知命令: $cmd" >&2; echo >&2; usage >&2; exit 1 ;;
+esac

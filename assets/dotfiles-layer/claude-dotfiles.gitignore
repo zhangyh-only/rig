@@ -1,0 +1,27 @@
+# 把 ~/.claude 纳入 dotfiles 仓库前，用本 .gitignore 挡住"机密 + 机器态"文件。
+# 只同步可移植部分：hooks/、settings.json、conventions.md、agents/、commands/。
+
+# 机密 / 凭据
+auth.json
+.credentials.json
+*token*
+*secret*
+
+# 机器态 / 会话历史（不可移植、且含隐私）
+history.jsonl
+sessions/
+projects/
+todos/
+shell-snapshots/
+statsig/
+telemetry/
+logs/
+ide/
+
+# 本机覆盖 / 备份 / 临时
+settings.local.json
+backups/
+*.bak
+
+# 第三方/缓存（按需）
+plugins/

@@ -1,0 +1,13 @@
+{
+  "_comment": "【可选·流程级独立】只有当本项目需要 额外/不同 的步骤时才用。把本文件改名为 settings.json 提交到项目。这里登记的 hook 会与全局机制 hook 叠加执行（不是替换）。下面示例：本项目额外加一道安全扫描。删掉示例换成你要的。",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          { "type": "command", "command": "$CLAUDE_PROJECT_DIR/scripts/security-scan.sh" }
+        ]
+      }
+    ]
+  }
+}
