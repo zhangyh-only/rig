@@ -4,24 +4,33 @@
 
 > 不是更聪明的 prompt，是结构性约束：规范在编码时**注入**（push，不靠触发）、违规被**确定性的闸**当场拦（lint / 红线 / verify）、状态外置、意图×风险决定流程力度。
 
-## 怎么用（两步，第一步只此一次）
+## 完整顺序（从零到用起来）
 
-**① 装一次 / 每台机器** —— 把机制装进 `~/.claude`（hooks + 子 agent + 全局 `/rig:*` 命令 + 注册 skill）：
+终端**只在 A 出现一次**；B、C 全在 AI 会话里敲 `/rig:*`。
 
+### A · 装一次（每台机器）
 ```bash
 git clone https://github.com/zhangyh-only/rig.git
-bash rig/scripts/bootstrap.sh        # 幂等；settings 合并不覆盖
+bash rig/scripts/bootstrap.sh        # 装 hooks/agents/全局 /rig: 命令/skill；自动先备份、幂等、settings 合并不覆盖
+bash rig/install.sh                  # 可选：把 rig 加进 PATH（模型 B 基本用不到）
 ```
+- 跑完**开一个新 Claude 会话**（hooks 与 `/rig:*` 命令在新会话才生效）。
+- 克隆目录别移走（skill 软链指向它）。
+- 不想碰终端？在任意会话里说「跑 `rig/scripts/bootstrap.sh` 把 rig 装进我的 ~/.claude」，让 AI 用 Bash 替你跑——效果一样。
 
-> - 不想自己敲终端？在任意 AI 会话里说「跑 `rig/scripts/bootstrap.sh` 把 rig 装到我的 ~/.claude」，让 AI 用 Bash 替你跑——效果一样。
-> - 装完**开个新会话**（hooks 与 `/rig:*` 命令在新会话才生效）；克隆目录别移走（skill 软链指向它）。
-> - 可选 `bash rig/install.sh`：把 `rig` 加进 PATH，方便在终端直接敲 `rig`（模型 B 下基本用不到）。
+### B · 接入一个项目（每个项目一次，在 AI 里）
+1. 进项目目录、开新会话；建议先 `git switch -c harness-onboard` 把在飞的改动隔开。
+2. 敲 **`/rig:init`** —— AI 检测缺啥补啥、铺骨架、把既有规范（`memory-bank`/`.cursorrules`…）归并进 `docs/conventions/` 三桶、从 `pom`/`package.json` 推导 `AGENTS.md` 地图、起草 `scripts/verify-local.sh`。
+3. 审 diff，确认后 commit。
+4. 把 `scripts/verify-local.sh` 填成项目真实命令（compile→test→smoke）。
+5. 敲 **`/rig:doctor`** 自检，绿了就接入完成。
 
-**② 之后都在 AI 里敲 `/rig:*`，不再碰终端：**
-
-- **`/rig:init`** —— 接入当前项目：检测 → 装缺的机制 → 铺骨架 → 归并既有规范、从 `pom`/`package.json` 推导 `AGENTS.md` 地图、起草 `verify-local`（判断活由 AI 读 [`SKILL.md`](SKILL.md) 完成；幂等，重复跑只补缺的）。
-- **`/rig:doctor`** —— 自检（注入 / 红线 / 闸 / 降级 绿不绿）。
-- 接入后该项目就有工作流命令：`/rig:new-change` `/rig:archive-change` `/rig:adr` `/rig:feature-spec` `/rig:review` `/rig:learn`。
+### C · 日常干活（每个任务）
+背后**自动**跑（不用记）：编码前注入规范 → 改完 `lint` 拦 → 改受保护文件 `guard` 拦 → 收工 `verify` 拦。
+按 意图×风险 用命令：
+- 小 bug / 文案 → 直接改，闸兜底；
+- 跨文件特性 → `/rig:new-change` 起变更 → 开发 → `/rig:review` 收尾复核 → `/rig:archive-change` 归档；
+- 跨域决策 → `/rig:adr`；代码稳定 → `/rig:feature-spec` 沉淀；踩了坑 → `/rig:learn`。
 
 ## 它装了什么
 

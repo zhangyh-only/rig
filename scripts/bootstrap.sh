@@ -2,6 +2,8 @@
 # 新设备一键 bootstrap：把全局机制装到 ~/.claude（幂等）。在 rig/ 下跑：bash scripts/bootstrap.sh
 set -u
 here="$(cd "$(dirname "$0")/.." && pwd)"   # skill 根目录
+echo "== 0. 备份现有 ~/.claude（覆盖前留还原点；不存在的自动跳过）=="
+bash "$here/scripts/backup.sh" "$HOME/.claude/hooks" "$HOME/.claude/agents" "$HOME/.claude/commands" "$HOME/.claude/settings.json" "$HOME/.claude/conventions.md" 2>/dev/null || true
 echo "== 1. 机器画像 =="
 bash "$here/scripts/detect-env.sh" "$PWD" | sed -n '1,12p'
 echo "== 2. 装全局 hook =="
