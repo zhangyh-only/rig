@@ -10,4 +10,4 @@ for f in "$@"; do
   base="$(printf '%s' "$f" | sed 's#^/##; s#/#_#g')"
   cp -R "$f" "$dir/$base" && n=$((n+1)) && echo "  备份 $f -> $dir/$base"
 done
-echo "已备份 $n 项到 $dir（回滚：把对应文件拷回原位）"
+echo "已备份 $n 项到 ${dir}（回滚：把对应文件拷回原位）"

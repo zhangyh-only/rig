@@ -39,4 +39,4 @@ jq -n --slurpfile t "$target" --slurpfile s "$source" '
 ' > "$target.tmp"
 
 mv "$target.tmp" "$target"
-echo "merged hooks into $target（备份: $target.bak）"
+echo "merged hooks into ${target}（备份: $target.bak）"

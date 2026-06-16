@@ -37,7 +37,7 @@ for d in "$changes_dir"/*/; do
     [ -f "${d}tasks.md" ]    && block="$block#### 任务清单"$'\n'"$(cat "${d}tasks.md")"$'\n'
     if [ -d "${d}specs" ]; then
       while IFS= read -r sd; do
-        block="$block#### 规格增量（$sd）"$'\n'"$(cat "$sd")"$'\n'
+        block="$block#### 规格增量（${sd}）"$'\n'"$(cat "$sd")"$'\n'
       done < <(find "${d}specs" -name 'spec.md' 2>/dev/null)
     fi
     printf '%s\n' "$block"
@@ -45,7 +45,7 @@ for d in "$changes_dir"/*/; do
   else
     done_n="$(grep -c '\- \[[xX]\]' "${d}tasks.md" 2>/dev/null || echo 0)"
     todo_n="$(grep -c '\- \[ \]' "${d}tasks.md" 2>/dev/null || echo 0)"
-    echo "### 变更：$name（摘要·已超注入上界，详见 openspec/changes/$name/）任务 ${done_n} 完成 / ${todo_n} 待办"
+    echo "### 变更：${name}（摘要·已超注入上界，详见 openspec/changes/$name/）任务 ${done_n} 完成 / ${todo_n} 待办"
   fi
 done
 

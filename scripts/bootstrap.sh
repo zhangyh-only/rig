@@ -25,6 +25,13 @@ echo "  已注册 ~/.claude/skills/rig -> $here"
 echo "== 3. 全局个人偏好（不覆盖既有）=="
 if [ -f "$HOME/.claude/conventions.md" ]; then echo "  已存在，跳过（如需合并请手动）"; else cp "$here"/assets/dotfiles-layer/conventions.md "$HOME/.claude/conventions.md"; echo "  已拷 conventions.md"; fi
 echo "== 4. 合并 hooks 进 settings.json（幂等不覆盖）=="
-bash "$here/scripts/merge-settings.sh" "$HOME/.claude/settings.json" "$here/assets/dotfiles-layer/settings.json"
-echo "== 完成 =="
+ok4=0
+if bash "$here/scripts/merge-settings.sh" "$HOME/.claude/settings.json" "$here/assets/dotfiles-layer/settings.json"; then
+  n=$(jq '[(.hooks // {}) | to_entries[].value[]?.hooks[]?.command] | length' "$HOME/.claude/settings.json" 2>/dev/null || echo 0)
+  if [ "${n:-0}" -ge 1 ]; then echo "  ✓ 已注册 ${n} 个 hook 命令"; ok4=1
+  else echo "  ✗ 合并后未见 hook 注册——hook 不会触发！把本段输出贴给我排查。" >&2; fi
+else
+  echo "  ✗ merge-settings 失败——hook 未注册，整套机制不会触发！把本段输出贴给我排查。" >&2
+fi
+if [ "$ok4" -eq 1 ]; then echo "== 完成 =="; else echo "== 未完成：第 4 步失败（见上 ✗），hook 不会生效，先修这一步 =="; fi
 echo "开新会话使 hook 与 /rig: 命令生效。建议把 ~/.claude/{hooks,agents,commands,settings.json,conventions.md} 纳入 dotfiles 仓库（用 assets/dotfiles-layer/claude-dotfiles.gitignore 挡机密）。"

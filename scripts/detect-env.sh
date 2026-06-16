@@ -56,7 +56,7 @@ else
 fi
 
 echo
-echo "## 项目语言矩阵（lint-one.sh 需覆盖这些；$proj）"
+echo "## 项目语言矩阵（lint-one.sh 需覆盖这些；${proj}）"
 if git -C "$proj" rev-parse >/dev/null 2>&1; then
   git -C "$proj" ls-files 2>/dev/null | sed -n 's/.*\.\([A-Za-z0-9]\{1,6\}\)$/\1/p' \
     | sort | uniq -c | sort -rn | head -15 | awk '{printf "  .%-6s %s\n", $2, $1}'

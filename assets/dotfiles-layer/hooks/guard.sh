@@ -21,7 +21,7 @@ while IFS= read -r pat; do
   case "$pat" in \#*) continue ;; esac   # 跳过注释行
   # shellcheck disable=SC2254
   case "$file" in
-    $pat) echo "🚫 受保护路径，禁止修改：$file（命中红线：$pat）" >&2; exit 2 ;;
+    $pat) echo "🚫 受保护路径，禁止修改：${file}（命中红线：${pat}）" >&2; exit 2 ;;
   esac
 done <<< "$patterns"
 

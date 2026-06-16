@@ -27,7 +27,7 @@ if [ -d "$cdir" ]; then
   for d in "$cdir"/*/; do
     n="$(basename "$d")"; case "$n" in archive|_*) continue ;; esac; [ -d "$d" ] || continue
     [ -f "${d}tasks.md" ] && ! grep -q '\- \[ \]' "${d}tasks.md" 2>/dev/null && continue
-    add "- 进行中变更：$n（实现须落在其范围内）"
+    add "- 进行中变更：${n}（实现须落在其范围内）"
   done
 fi
 
