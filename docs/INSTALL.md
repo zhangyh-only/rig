@@ -82,9 +82,11 @@ mkdir -p $P/.claude && cp -rn assets/project-layer/.claude/commands $P/.claude/
 cp -n assets/project-layer/.claude/protected-paths.txt $P/.claude/ 2>/dev/null
 # docs：规范三桶（把既有规范归并进来）+ ADR + plan 模板
 mkdir -p $P/docs && cp -rn assets/project-layer/docs/conventions assets/project-layer/docs/adr assets/project-layer/docs/plans $P/docs/
-# 格式底层 + openspec change 模板
+# 格式底层
 cp -n assets/project-layer/.editorconfig $P/ 2>/dev/null
-npx openspec init        # 已有 openspec/ 则跳过
+# openspec（按需，非预研才装）：真包是 @fission-ai/openspec（裸 openspec 是 2019 空壳！）
+npm i -g @fission-ai/openspec            # 缺则装；联网装全局包，按需
+openspec init --tools none --force $P    # 非交互；1.4.1 生成 config.yaml；已初始化则跳过
 mkdir -p $P/openspec/changes && cp -rn assets/project-layer/openspec/changes/_template $P/openspec/changes/
 # 接好本语言 linter（checkstyle.xml/.eslintrc/...）并在 CI 设 required check
 # 注意：完整清单以 reference/manifest.md 为准；AI 辅助路径会自动按 manifest 补齐

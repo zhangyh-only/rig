@@ -82,7 +82,7 @@
 | bash-version-and-shell | bash 可用且版本足够（macOS 自带 3.2） | command -v bash; bash --version | install-command | 必要时 brew install bash；或核对仅用 3.2 兼容语法 | false |
 | maven-runtime-and-plugins | Java 项目 mvn/gradle + checkstyle/surefire/archunit（仅 java 适用） | command -v mvn；pom grep 插件；或 gradlew | merge | pom 加 checkstyle 绑 verify；gradle 另适配 | false |
 | python-go-runtime | Python/Go 运行时及各自 linter（按 pyproject/go.mod 适用） | command -v python3/go；有 pyproject/go.mod 才要求 | install-command | brew/官方安装；不需要的语言不报缺 | false |
-| openspec-cli-available | openspec CLI（archive/validate/list 前提） | npx --no-install openspec --version \|\| command -v openspec | install-command | 缺则纳入批量征询问用户；同意即 `npm i -g openspec`，拒绝则标缺不铺 openspec/ | true |
+| openspec-cli-available | openspec CLI（archive/validate/list 前提） | npx --no-install openspec --version \|\| command -v openspec | install-command | 缺则纳入批量征询问用户；同意即 `npm i -g @fission-ai/openspec`，拒绝则标缺不铺 openspec/ | true |
 | codex-prereq-install | Codex CLI/App + ~/.codex（仅当适配 Codex 时） | which codex \|\| ls /Applications/Codex.app；test -d ~/.codex | install-command | brew/官方安装 + 首次登录；auth.json 不进同步 | true |
 | skill-sync-mechanism `[ready]` | skills 落地位置(默认工具自带目录 ~/.claude/skills;若用 cc-switch 等同步器才写同步源) | ls -la ~/.claude/skills/ \| grep '\->'；ls ~/.cc-switch/skills；grep skillSyncMethod | install-command | 默认直接装进 ~/.claude/skills(Claude);仅当该机确用 cc-switch 等同步器才改写同步源 | false |
 
@@ -224,10 +224,10 @@
 
 | id | what | detect | remediation_type | remediation | templatable |
 |---|---|---|---|---|---|
-| openspec-dir-initialized | openspec/ 骨架（**是否启用由用户在批量征询里定，别按"预研"字样自动判 N/A**） | test -d openspec/changes && test -d openspec/specs && test -f openspec/project.md | install-command | 缺则进批量征询问用户：要→`npm i -g openspec` + `npx openspec init` + 拷模板；不要→跳过不铺 | true |
+| openspec-dir-initialized | openspec/ 骨架（**是否启用由用户在批量征询里定，别按"预研"字样自动判 N/A**） | test -d openspec/changes && test -d openspec/specs && ( test -f openspec/config.yaml \|\| test -f openspec/project.md ) | install-command | 缺则进批量征询问用户：要→`npm i -g @fission-ai/openspec`（**裸 `openspec` 是 2019 占位空壳 v0.0.0，必须装 `@fission-ai/openspec`**）+ `openspec init --tools none --force .`（非交互）+ 拷 change 模板；不要→跳过不铺 | true |
 | openspec-active-change-wellformed `[declared]` | 进行中 change 结构完整（proposal/tasks/spec-delta），不完整则注入残缺 | 遍历 changes/*/ 测三件套→incomplete | author-with-user | 脚手架补缺占位骨架并访谈填写；openspec validate <change> 作探测器 | true |
 | openspec-change-template `[ready]` | change 提案模板（proposal/tasks/spec-delta 骨架），解决"不知写什么" | ls assets/.../openspec/changes/_template | template-copy | **门控**：仅当用户在批量征询里同意启用 openspec 且 CLI 已装时，随 `openspec init` 一起拷入；用户不要或 CLI 缺则**不铺**。机械层 `rig init` 不再无条件铺 | true |
-| openspec-project-md-grounded | project.md 填真实信息非 init 默认占位 | grep -qiE 'TODO\|<.*>\|占位' openspec/project.md→incomplete | derive-from-code | 从 AGENTS 地图+构建文件推导技术栈/命令回填，再访谈补约定 | false |
+| openspec-project-grounded | openspec 项目背景文件填真实信息非默认占位（**1.4.1=`config.yaml`，旧版=`project.md`**） | grep -qiE 'TODO\|<.*>\|占位' openspec/config.yaml 或 openspec/project.md →incomplete | derive-from-code | 从 AGENTS 地图+构建文件推导技术栈/命令回填，再访谈补约定 | false |
 | openspec-archive-lifecycle | 完成的 change 跑 archive（否则死 change 持续误注入膨胀上下文） | find changes 非 archive 子目录 tasks 全勾选却未归档→STALE | author-with-user | 归档约定文档+可选 Stop hook 提示；引导跑 openspec archive | true |
 | adr-dir-and-template `[ready]` | docs/adr/ + ADR 模板 + 空索引 README（why 唯一权威终点） | test -d docs/adr && ls docs/adr/0000-template.md | template-copy | assets 提供 ADR 模板（MADR 精简）+ README 空索引（首条从 0001 起，用 /adr 创建） | true |
 | missing-adr-decisions-why | 已发生重大决策补写 ADR（散见 commit/PR/注释） | docs/adr 为空但代码/历史有明显架构决策 | author-with-user | 模板可拷；扫历史列候选决策让用户逐条确认补写（内容不可伪造） | true |
