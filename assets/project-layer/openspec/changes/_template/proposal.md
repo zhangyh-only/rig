@@ -4,8 +4,9 @@
 > 配套 `tasks.md`（拆解执行清单）与 `specs/<域>/spec.md`（spec-delta，用 `## ADDED/MODIFIED/REMOVED Requirements`）。
 > 三件套齐全后跑 `openspec validate <change>`；变更落地、tasks 全勾选后跑 `openspec archive <change>` 合并进 `openspec/specs/`。
 > 填写时删掉所有 `<尖括号占位>` 和本引用块。
+> **标题保留 `## Why` 与 `## What Changes`**——`openspec validate`/`archive` 按这两个标题校验，改名/漏写会告警。
 
-## 背景
+## Why
 
 <为什么现在要做这个变更。当前是什么状态、痛在哪、不做会怎样。给出触发动机（用户诉求 / 线上问题 / 技术债 / 新依赖），让读者无需追问就理解必要性。只讲事实，不写空泛口号。>
 
@@ -20,7 +21,7 @@
 
 - <本次不解决的相关问题，留待后续或永不做的原因>
 
-## 范围
+## What Changes
 
 <划清边界：改哪些、不动哪些。让执行者和评审一眼看清影响面。>
 

@@ -19,18 +19,18 @@ argument-hint: <变更简述，一句话说清要建什么>
 在 `openspec/changes/<id>/` 下建以下三件套。**范围必须明确、验收必须可执行**——这是这个命令存在的意义，宁可逼用户当场把边界和验收说清，也不要写空话。
 
 ### proposal.md
+> **必须含 `## Why` 与 `## What Changes` 两个标题**——`openspec validate`/`archive` 按这两个标题校验，漏了会告警。
 ```markdown
 # <change id>
 
-## 背景
+## Why
 <为什么现在要做：触发的问题 / 需求 / 痛点，1-3 句，给出可判断的事实>
 
-## 目标
-<这次要达成的可验证结果，bullet 列。每条都应能回答"怎么算做完了">
+**目标（可验证，每条能回答"怎么算做完了"）：**
 - <目标 1>
 - <目标 2>
 
-## 范围
+## What Changes
 **改这些：**
 - <明确列出会动的模块 / 文件 / 接口>
 
@@ -53,7 +53,7 @@ argument-hint: <变更简述，一句话说清要建什么>
 
 ### specs/&lt;capability&gt;/spec.md
 - `<capability>` 取受影响的能力域名（kebab-case，如 `auth`、`billing`），与简述对应。
-- 每条需求用 **"系统应当…"** 句式，可判定、不含糊。
+- 每条需求用 **"系统应当（SHALL）…"** 句式——**`openspec validate` 要求需求文本含 `SHALL` 或 `MUST` 关键字**（纯中文"应当"它识别不了），可判定、不含糊。
 
 ```markdown
 # <capability> — spec delta
@@ -61,7 +61,7 @@ argument-hint: <变更简述，一句话说清要建什么>
 ## ADDED Requirements
 
 ### Requirement: <一句话需求名>
-系统应当 <可验证的行为描述>。
+系统应当（SHALL） <可验证的行为描述>。
 
 #### Scenario: <场景名>
 - **当** <前置条件 / 触发>
