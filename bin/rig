@@ -3,7 +3,19 @@
 # CLI 是"机械/确定性层"(检测、装全局机制、铺项目骨架、自检);
 # 判断性工作(归并既有规范、推导 AGENTS 地图、写 verify-local)由 AI 读 SKILL.md 完成。
 set -u
-SELF="$(cd "$(dirname "$0")/.." && pwd)"   # rig 包根
+# 解析自身真实路径:经 PATH 软链(~/.local/bin/rig)或 skill 软链(~/.claude/skills/rig)调用时,
+# 都要定位到真实克隆的包根,而不是软链所在目录(否则 scripts/assets 全找不到)。回归测试见 test/resolve-self.sh。
+__src="${BASH_SOURCE[0]:-$0}"
+while [ -h "$__src" ]; do
+  __dir="$(cd -P "$(dirname "$__src")" && pwd)"
+  __src="$(readlink "$__src")"
+  case "$__src" in /*) ;; *) __src="$__dir/$__src" ;; esac
+done
+SELF="$(cd -P "$(dirname "$__src")/.." && pwd)"   # rig 包根(真实物理路径)
+if [ ! -f "$SELF/scripts/detect-env.sh" ]; then
+  echo "rig: 包根解析异常,$SELF 下找不到 scripts/(可能软链损坏)。请用真实克隆路径运行,如 ~/rig/bin/rig" >&2
+  exit 1
+fi
 cmd="${1:-help}"; [ "$#" -gt 0 ] && shift
 
 usage(){

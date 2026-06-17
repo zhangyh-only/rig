@@ -1,7 +1,15 @@
 #!/usr/bin/env bash
 # 新设备一键 bootstrap：把全局机制装到 ~/.claude（幂等）。在 rig/ 下跑：bash scripts/bootstrap.sh
 set -u
-here="$(cd "$(dirname "$0")/.." && pwd)"   # skill 根目录
+# 解析真实包根:经 skill 软链(~/.claude/skills/rig)或 PATH 软链调用也要落到真实克隆,
+# 否则下面 2d 的 ln 会把软链指向它自己成环(Too many levels of symbolic links)。
+__src="${BASH_SOURCE[0]:-$0}"
+while [ -h "$__src" ]; do
+  __dir="$(cd -P "$(dirname "$__src")" && pwd)"
+  __src="$(readlink "$__src")"
+  case "$__src" in /*) ;; *) __src="$__dir/$__src" ;; esac
+done
+here="$(cd -P "$(dirname "$__src")/.." && pwd)"   # skill 根目录(真实物理路径)
 echo "== 0. 备份现有 ~/.claude（覆盖前留还原点；不存在的自动跳过）=="
 bash "$here/scripts/backup.sh" "$HOME/.claude/hooks" "$HOME/.claude/agents" "$HOME/.claude/commands" "$HOME/.claude/settings.json" "$HOME/.claude/conventions.md" 2>/dev/null || true
 echo "== 1. 机器画像 =="
@@ -20,8 +28,12 @@ cp -R "$here"/assets/dotfiles-layer/commands/* "$HOME/.claude/commands/"
 echo "  已装 $(ls "$here"/assets/dotfiles-layer/commands/rig/*.md | wc -l | tr -d ' ') 个全局命令 (/rig:*)"
 echo "== 2d. 注册 rig skill（软链到 ~/.claude/skills/rig，AI 可发现）=="
 mkdir -p "$HOME/.claude/skills"
-ln -sfn "$here" "$HOME/.claude/skills/rig"
-echo "  已注册 ~/.claude/skills/rig -> $here"
+if [ "$here" = "$HOME/.claude/skills/rig" ]; then
+  echo "  ⚠ 包根解析成软链自身,跳过注册以防自环(请用真实克隆路径运行)" >&2
+else
+  ln -sfn "$here" "$HOME/.claude/skills/rig"
+  echo "  已注册 ~/.claude/skills/rig -> $here"
+fi
 echo "== 3. 全局个人偏好（不覆盖既有）=="
 if [ -f "$HOME/.claude/conventions.md" ]; then echo "  已存在，跳过（如需合并请手动）"; else cp "$here"/assets/dotfiles-layer/conventions.md "$HOME/.claude/conventions.md"; echo "  已拷 conventions.md"; fi
 echo "== 4. 合并 hooks 进 settings.json（幂等不覆盖）=="
