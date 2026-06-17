@@ -31,10 +31,15 @@ if [ -d "$cdir" ]; then
   done
 fi
 
-# harness 健康自检：仅对"已接入 harness"的项目（有 AGENTS.md 或 docs/conventions/）。
-# 未接入的 throwaway 目录 → 不检查、不报警（优雅降级，与低摩擦工作不冲突）。
-if [ -f "$proj/AGENTS.md" ] || [ -d "$proj/docs/conventions" ]; then
-  [ -x "$proj/scripts/verify-local.sh" ] || add "- ⚠️ 缺 scripts/verify-local.sh：完成度硬闸（Stop）当前空转、会静默放行——“已完成”无法被客观验证，请尽早补上。"
+# harness 健康自检：仅对"已接入 rig"的项目——用 rig init 的确定标记 .claude/commands/rig/，
+# 而非泛用的 AGENTS.md（很多非 rig 项目也有 AGENTS.md，用它会误报、污染无关项目）。
+if [ -d "$proj/.claude/commands/rig" ]; then
+  v="$proj/scripts/verify-local.sh"
+  if [ ! -x "$v" ]; then
+    add "- ⚠️ 缺 scripts/verify-local.sh：完成度硬闸（Stop）当前空转、会静默放行——“已完成”无法被客观验证，请尽早补上。"
+  elif grep -q '^SKELETON=1' "$v" 2>/dev/null; then
+    add "- ⚠️ scripts/verify-local.sh 还是骨架（SKELETON=1）：完成度硬闸仍空转、静默放行。请填好 compile→test→smoke 真实命令并把 SKELETON 置 0。"
+  fi
   [ -x "$proj/scripts/lint-one.sh" ] || add "- ⚠️ 缺 scripts/lint-one.sh：遵守度 lint 闸当前空转、改完文件不被检查，请尽早补上。"
 fi
 

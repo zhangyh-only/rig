@@ -36,4 +36,4 @@
 
 ---
 
-> 全部勾选后，运行 `/archive-change <change-id>` 归档：tasks 收尾、spec-delta 合并进 `openspec/specs/`。
+> 全部勾选后，运行 `/rig:archive-change <change-id>` 归档：tasks 收尾、spec-delta 合并进 `openspec/specs/`。

@@ -7,7 +7,7 @@ argument-hint: <变更简述，一句话说清要建什么>
 
 ## 前置检查
 1. 确认 `openspec/`（含 `openspec/changes/`、`openspec/specs/`）存在。**不存在就停下**，提示：
-   > openspec 尚未初始化。请先运行 `npx openspec init`（或全局 `openspec init`），再回来执行 /new-change。
+   > openspec 尚未初始化。请先运行 `npx openspec init`（或全局 `openspec init`），再回来执行 /rig:new-change。
    不要自行创建 openspec 骨架。
 2. `$ARGUMENTS` 为空时，先问清楚这次要建什么，拿到一句话简述再继续。
 
@@ -48,7 +48,7 @@ argument-hint: <变更简述，一句话说清要建什么>
 - [ ] <实现任务 1>
 - [ ] <实现任务 2>
 - [ ] 写可执行验收：把上面"目标"翻成可运行的断言（测试用例 / 脚本 / `verify-local.sh` 步骤），跑通即视为达成
-- [ ] 自验证通过后，用 /archive-change 把 spec delta 合并进 openspec/specs/
+- [ ] 自验证通过后，用 /rig:archive-change 把 spec delta 合并进 openspec/specs/
 ```
 
 ### specs/&lt;capability&gt;/spec.md
@@ -74,4 +74,4 @@ argument-hint: <变更简述，一句话说清要建什么>
 2. 提醒用户：
    - 把 proposal 的范围和验收**再过一遍**，占位符 `<…>` 全部替换为真实内容；
    - 可跑 `openspec validate <id>`（若装了 openspec CLI）检查结构；
-   - 实现必须落在本 change 范围内，完成并自验证后用 /archive-change 归档。
+   - 实现必须落在本 change 范围内，完成并自验证后用 /rig:archive-change 归档。

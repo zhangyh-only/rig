@@ -11,7 +11,7 @@ if [ -d "$cdir" ]; then
     n="$(basename "$d")"; case "$n" in archive|_*) continue ;; esac; [ -d "$d" ] || continue
     t="${d}tasks.md"; [ -f "$t" ] || continue
     if ! grep -q '\- \[ \]' "$t" 2>/dev/null && grep -q '\- \[[xX]\]' "$t" 2>/dev/null; then
-      echo "提醒：变更 $n 任务已全勾选，可用 /archive-change 归档。"
+      echo "提醒：变更 $n 任务已全勾选，可用 /rig:archive-change 归档。"
     fi
   done
 fi
