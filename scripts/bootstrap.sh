@@ -10,6 +10,20 @@ while [ -h "$__src" ]; do
   case "$__src" in /*) ;; *) __src="$__dir/$__src" ;; esac
 done
 here="$(cd -P "$(dirname "$__src")/.." && pwd)"   # skill 根目录(真实物理路径)
+# 前置硬门:jq 是阻断级——settings 合并/注入/红线判断全靠它。缺了就提前干净退出,
+# 别让后面的 cp/ln 装出"半装的死 harness"(hook 都在、却一个都不注册触发)。
+if ! command -v jq >/dev/null 2>&1; then
+  if command -v brew >/dev/null 2>&1; then __ic="brew install jq"
+  elif command -v apt >/dev/null 2>&1; then __ic="sudo apt install -y jq"
+  elif command -v dnf >/dev/null 2>&1; then __ic="sudo dnf install -y jq"
+  elif command -v yum >/dev/null 2>&1; then __ic="sudo yum install -y jq"
+  elif command -v pacman >/dev/null 2>&1; then __ic="sudo pacman -S jq"
+  else __ic="用你的包管理器安装 jq"; fi
+  echo "✗ 缺 jq（阻断级）——整套 hook 机制依赖它(settings 合并/规范注入/红线判断)。" >&2
+  echo "  先装再重跑:$__ic" >&2
+  echo "  (未做任何改动就退出,避免半装。)" >&2
+  exit 1
+fi
 echo "== 0. 备份现有 ~/.claude（覆盖前留还原点；不存在的自动跳过）=="
 bash "$here/scripts/backup.sh" "$HOME/.claude/hooks" "$HOME/.claude/agents" "$HOME/.claude/commands" "$HOME/.claude/settings.json" "$HOME/.claude/conventions.md" 2>/dev/null || true
 echo "== 1. 机器画像 =="
@@ -47,3 +61,4 @@ else
 fi
 if [ "$ok4" -eq 1 ]; then echo "== 完成 =="; else echo "== 未完成：第 4 步失败（见上 ✗），hook 不会生效，先修这一步 =="; fi
 echo "开新会话使 hook 与 /rig: 命令生效。建议把 ~/.claude/{hooks,agents,commands,settings.json,conventions.md} 纳入 dotfiles 仓库（用 assets/dotfiles-layer/claude-dotfiles.gitignore 挡机密）。"
+[ "$ok4" -eq 1 ] || exit 1   # 半装时退非零,让调用方(rig init)能程序化感知

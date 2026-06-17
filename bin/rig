@@ -58,13 +58,15 @@ case "$cmd" in
     for a in "$@"; do case "$a" in
       --claude) tool=claude ;; --codex) tool=codex ;; --cursor) tool=cursor ;;
       --*) echo "未知选项: $a" >&2; exit 1 ;;
-      *) proj="$(cd "$a" 2>/dev/null && pwd || echo "$a")" ;;
+      *) if [ -d "$a" ]; then proj="$(cd "$a" && pwd)"; else echo "rig init: 目录不存在: $a（别铺成半成品骨架）" >&2; exit 1; fi ;;
     esac; done
     echo "== rig init · tool=$tool · project=$proj =="
     echo; echo "-- 机器画像 --"; bash "$SELF/scripts/detect-env.sh" "$proj" | sed -n '1,12p'
     echo; echo "-- 全局机制 --"
     if [ "$tool" = "claude" ]; then
-      bash "$SELF/scripts/bootstrap.sh"
+      if ! bash "$SELF/scripts/bootstrap.sh"; then
+        echo "⚠ 全局机制未装全(bootstrap 非零退出,见上 ↑)。项目骨架仍会铺,但 hook 机制要等你修好上面的问题(常见:装 jq)后重跑 rig init 才生效。" >&2
+      fi
     else
       echo "⚠ 目前只有 Claude 的全局 hook 机制完整。$tool 仅落 canonical(AGENTS/conventions)+CI 兜底、门禁不强制——先把 claude 跑通,$tool 后续补。跳过全局机制安装。"
     fi
