@@ -12,7 +12,7 @@ description: 安装、迁移或更新这套"AI coding 分层工作流"（本地 
 1. **幂等**：可反复运行；已存在的不重复加、不破坏。
 2. **合并不覆盖**：`AGENTS.md` / `CLAUDE.md` / `settings.json` 一律「读取→合并→写回」，保留原有内容。**禁止整体覆盖。**
 3. **先探测后动手**；联网/破坏性/写敏感区的项按 manifest 的 `requires_consent` 汇总成**一次批量征询**，确认后才动。
-4. **整理既有不丢弃**：项目已有的规范/规则 → 归并进 `docs/conventions/` 并按三桶分类，原内容保留（清理需许可）。
+4. **整理既有不丢弃**：项目已有的规范/规则 → 归并进 `docs/conventions/` 并按三桶分类，原内容保留（清理需许可）。**例外 `memory-bank/`**（用户已退役的个人模式）：按既定映射迁移后**整目录删除**——用户已授权的标准动作，git 跟踪可找回；映射见步骤 3.B 的「memory-bank 退役」与 manifest `memory-bank-legacy-not-migrated`。
 5. **缺失才补**：按 manifest 逐项 detect，仅对 absent/incomplete 补救；补后 `verify_after` 复验，失败回滚。
 6. **数据驱动**：探测与补齐的清单一律来自 `reference/manifest.md`，SKILL.md **不内嵌任何要素枚举**；遇 manifest 未覆盖的新要素，**先往 manifest 加一条再跑**，而非在流程里写死。这是"覆盖任意缺失"的保证。
 
@@ -44,25 +44,25 @@ description: 安装、迁移或更新这套"AI coding 分层工作流"（本地 
 
 ### 步骤 2 · 补救 project 项（遍历 manifest 中 scope=project）
 同样遍历 detect 为 absent/incomplete 的项。代表性：AGENTS.md(建或只补缺章)、CLAUDE.md(@AGENTS.md)、docs/conventions、lint-one.sh(按语言矩阵补分支)、openspec init、protected-paths、gitignore 一致性等。
-**探测既有规则文件走 manifest 类别 R 的 rule-sources 数组**（AGENTS/CLAUDE/.cursorrules/.cursor/rules/copilot-instructions/memory-bank/GEMINI.md/…，新工具只往数组加一行）；凡发现→归并进 docs/conventions 并按三桶分类，原文件保留。
+**探测既有规则文件走 manifest 类别 R 的 rule-sources 数组**（AGENTS/CLAUDE/.cursorrules/.cursor/rules/copilot-instructions/memory-bank/GEMINI.md/…，新工具只往数组加一行）；凡发现→归并进 docs/conventions 并按三桶分类，原文件保留（**`memory-bank/` 例外：按退役映射迁移后整目录删除，见铁律 4**）。
 
 ### 步骤 3 · 两类缺失的补救分发（核心）
 步骤 3 不是独立清单——它就是步骤 0 探测为 absent/incomplete 的项的补救，按 `templatable` 分两条路：
 - **3.A 可模板**（templatable=true，template-copy/merge/install-command）→ 引擎可自动落地（联网/破坏除外需同意），内容固定与项目无关。
-- **3.B 项目专属·不可模板**（templatable=false，organize-existing/derive-from-code/author-with-user）→ **禁止凭模板伪造**，按阶梯：① `organize-existing` 把散落既有归并进权威单源（旧 .cursorrules/copilot-instructions/memory-bank → docs/conventions）→ ② 无则 `derive-from-code` 扫码推导草稿（从 pom/package.json 推 build/test/run、从模块结构推 architecture.md、从实体推术语表）→ ③ `author-with-user` 以**选择/确认题**而非填空题访谈定稿（回填 AGENTS 地图占位、补写 ADR、写 verify-local 命令、列项目红线）。安装器只负责"检测+识别候选+建骨架+发起"，内容以代码/用户为准。
+- **3.B 项目专属·不可模板**（templatable=false，organize-existing/derive-from-code/author-with-user）→ **禁止凭模板伪造**，按阶梯：① `organize-existing` 把散落既有归并进权威单源（旧 .cursorrules/copilot-instructions/memory-bank → docs/conventions）→ ② 无则 `derive-from-code` 扫码推导草稿（从 pom/package.json 推 build/test/run、从模块结构推 architecture.md、从实体推术语表）→ ③ `author-with-user` 以**选择/确认题**而非填空题访谈定稿（回填 AGENTS 地图占位、补写 ADR、写 verify-local 命令、列项目红线）。安装器只负责"检测+识别候选+建骨架+发起"，内容以代码/用户为准。**`memory-bank/` 是 organize-existing 的退役特例**：按映射迁移（`conventions/`→`docs/conventions/`、`project/feature-specs/`→`docs/feature-specs/`、`project/{architecture,modules,tech-stack,runtime}` 关键事实折进 `AGENTS.md` 地图且详细版不留、`tasks/`+`README.md` 丢弃）后 **`rm -rf memory-bank/`**——用户已授权的标准退役动作，git 可找回（见 manifest `memory-bank-legacy-not-migrated`）。
 
 ### 步骤 3.1 · 补后复验与回滚
 每项 remediate 后**重跑该项 detect（verify_after）**确认达成；merge 类额外 `jq empty` 校验且 permissions 不减，失败则从带时间戳备份回滚并标红。支持 `--dry-run` 只报不改。
 
 ### 步骤 4 · 验证 + 报告
 - 跑 `bash scripts/verify.sh <项目根>`（hook 闭环自检）；并**遍历 manifest 逐项复跑 detect** 汇总最终状态。
-- **报告清单**（逐项：期望→detect→动作→复验→待决）：新建了什么 / 合并了什么 / 跳过了什么 / 待用户决定（缺失 skill、linter 接入、占位符待回填、原 memory-bank 是否清理、悬空软链等）。末尾固定提示"hook 变更需开新会话生效"。
+- **报告清单**（逐项：期望→detect→动作→复验→待决）：新建了什么 / 合并了什么 / 跳过了什么 / 待用户决定（缺失 skill、linter 接入、占位符待回填、悬空软链等）；**memory-bank 若存在已按退役映射迁移并删除（删除在 diff 里、可 git 找回）**。末尾固定提示"hook 变更需开新会话生效"。
 
 ---
 
 ## 禁忌
 - 禁止整体覆盖已有 `AGENTS.md` / `CLAUDE.md` / `~/.claude/settings.json` / 项目 `.claude/settings.json`。
-- 禁止删除既有规范内容（"整理"= 迁移 + 保留；清理须许可）。
+- 禁止删除既有规范内容（"整理"= 迁移 + 保留；清理须许可）。**唯一例外 `memory-bank/`**：用户已授权"按映射迁移后整目录删除"为标准动作（git 可找回、删除进 diff 可审）。
 - 禁止未经确认就联网安装或执行破坏性命令。
 - **禁止在 SKILL.md 里硬编码要素清单**——任何新要素先进 `reference/manifest.md`。
 - **禁止用模板伪造项目专属内容**（规范条目/域设计/ADR 决策/验收命令/红线）——templatable=false 的项必须 organize/derive/author。

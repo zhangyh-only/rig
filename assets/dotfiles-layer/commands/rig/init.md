@@ -8,8 +8,14 @@ description: 把当前项目接入 rig（检测→装缺的全局机制→铺项
 
 1. **机械部分**（直接跑 CLI）：`rig init`（或 `~/.claude/skills/rig/bin/rig init`）——机器画像、装/补缺的全局机制（hooks/agents/settings）、铺项目骨架（AGENTS/CLAUDE/docs/conventions/scripts/项目级 `/rig:*` 命令，幂等不覆盖）。
 2. **判断部分**（你来做，禁止凭模板伪造）：
-   - 把项目既有规范（`memory-bank/`、`.cursorrules`、README 规范段…）**归并**进 `docs/conventions/` 并打 A/B/C 三桶；
-   - 从 `pom.xml`/`package.json`/`Makefile` **推导**回填 `AGENTS.md` 项目地图（build/test/run）；同时**以代码为准核对**既有规范/文档里的过时事实（如"暂无测试"、旧接口路径），过时的就更正，别照抄。
+   - 把项目既有规范（`.cursorrules`、`.github/copilot-instructions.md`、README 规范段、散落 `docs/` 规范…）**归并**进 `docs/conventions/` 并打 A/B/C 三桶，**原文件保留**（需续用可收敛为指针）。
+   - **若存在 `memory-bank/`（用户正退役的个人模式，唯一例外：迁移后整目录删除，不保留）——这是用户已授权的标准动作；memory-bank 受 git 跟踪，故删除会进 diff、commit 前可审、可 `git checkout` 找回**：
+     - `conventions/*` → `docs/conventions/`（权威全文，以代码核对纠错、打 A/B/C 桶）；
+     - `project/feature-specs/*` → `docs/feature-specs/`（rig 后向真相，1:1 迁、以代码核对）；
+     - `project/{architecture,modules,tech-stack,runtime}.md` → **只把关键事实折进 `AGENTS.md` §1 地图**（以代码为准），详细手写文档**不保留**（日后用 `/rig:feature-spec` 从代码重生）；
+     - `tasks/**`、`README.md` 及其余残余 → **丢弃**（过程记录，git 历史仍可捞）；
+     - 迁完 `rm -rf memory-bank/`，并在汇报里写明「memory-bank 已迁移并删除，删除见 diff、可 git 找回」。
+   - 从 `pom.xml`/`package.json`/`Makefile` **推导**回填 `AGENTS.md` 项目地图（build/test/run）；同时**以代码为准核对**既有规范/文档里的过时事实（如"暂无测试"、旧接口路径），过时的就更正，别照抄。别再让 `AGENTS.md` 指向已删除的 `memory-bank/` 路径。
    - 起草 `scripts/verify-local.sh` 的**真实命令**（compile→test→smoke），按项目实际填，**别留 `SKELETON=1` 占位**：
      - 先**探测测试基础设施依赖**：看测试配置（如 `src/test/resources/application.yml`）里 datasource/redis/mq 指向哪——本地？远程共享？
      - **分类用例**：hermetic（纯单测/Mockito，无需外部基础设施）vs 需全上下文（`@SpringBootTest`/需 DB·Redis）；
