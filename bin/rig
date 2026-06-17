@@ -48,8 +48,8 @@ scaffold_project(){
   mkdir -p "$P/docs"
   for d in conventions adr plans; do cp -Rn "$SELF/assets/project-layer/docs/$d" "$P/docs/" 2>/dev/null || true; done
   cp -n "$SELF/assets/project-layer/.editorconfig" "$P/" 2>/dev/null || true
-  # openspec change 模板(与 INSTALL.md/manifest 一致;openspec init 仍由 AI 在判断步骤跑)
-  mkdir -p "$P/openspec/changes"; cp -Rn "$SELF/assets/project-layer/openspec/changes/_template" "$P/openspec/changes/" 2>/dev/null || true
+  # 注:openspec/ 不在机械层无条件铺——它按需(applies_when:预研/demo=N/A)且要 openspec CLI 已装,
+  # 由 AI 在判断步骤处理(见 SKILL/init.md):需求驱动型 + CLI 在 → openspec init + 拷模板;否则标缺不铺。
 }
 
 case "$cmd" in

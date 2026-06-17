@@ -226,7 +226,7 @@
 |---|---|---|---|---|---|
 | openspec-dir-initialized | openspec/ 骨架（applies_when=需求驱动型；预研/demo 标 N/A） | test -d openspec/changes && test -d openspec/specs && test -f openspec/project.md | install-command | 经许可 npx openspec init | false |
 | openspec-active-change-wellformed `[declared]` | 进行中 change 结构完整（proposal/tasks/spec-delta），不完整则注入残缺 | 遍历 changes/*/ 测三件套→incomplete | author-with-user | 脚手架补缺占位骨架并访谈填写；openspec validate <change> 作探测器 | true |
-| openspec-change-template `[ready]` | change 提案模板（proposal/tasks/spec-delta 骨架），解决"不知写什么" | ls assets/.../openspec/changes/_template | template-copy | assets 新增 change 模板三件套随接入拷入 | true |
+| openspec-change-template `[ready]` | change 提案模板（proposal/tasks/spec-delta 骨架），解决"不知写什么" | ls assets/.../openspec/changes/_template | template-copy | **门控**：仅当 openspec 适用（非预研/demo，见 openspec-dir-initialized 的 applies_when）且 openspec CLI 已装时，随 `openspec init` 一起拷入；不适用或 CLI 缺则**不铺**、改为标缺。机械层 `rig init` 不再无条件铺 | true |
 | openspec-project-md-grounded | project.md 填真实信息非 init 默认占位 | grep -qiE 'TODO\|<.*>\|占位' openspec/project.md→incomplete | derive-from-code | 从 AGENTS 地图+构建文件推导技术栈/命令回填，再访谈补约定 | false |
 | openspec-archive-lifecycle | 完成的 change 跑 archive（否则死 change 持续误注入膨胀上下文） | find changes 非 archive 子目录 tasks 全勾选却未归档→STALE | author-with-user | 归档约定文档+可选 Stop hook 提示；引导跑 openspec archive | true |
 | adr-dir-and-template `[ready]` | docs/adr/ + ADR 模板 + 空索引 README（why 唯一权威终点） | test -d docs/adr && ls docs/adr/0000-template.md | template-copy | assets 提供 ADR 模板（MADR 精简）+ README 空索引（首条从 0001 起，用 /adr 创建） | true |
