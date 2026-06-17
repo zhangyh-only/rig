@@ -4,6 +4,14 @@ proj="${1:-$PWD}"
 hooks="$HOME/.claude/hooks"
 fail=0
 
+# 前置:无 jq 时所有 hook 都 command -v jq||exit 0 静默放行——下面的红线/注入测试必然全"放行",
+# 那不代表逻辑坏,而是缺 jq。先点名根因,别把"缺 jq"误报成"红线逻辑失效"。
+if ! command -v jq >/dev/null 2>&1; then
+  echo "✗ 缺 jq（阻断级）——所有 hook 依赖 jq 解析输入,缺了会【静默放行】,当前装的 hook 实际全空转。"
+  echo "  先装 jq(brew/apt install jq)再重跑自检。(无 jq 下红线/注入测试必然全'放行',不代表逻辑正确。)"
+  exit 1
+fi
+
 echo "=== 1. 注入脚本（编码 prompt 应输出规范）==="
 if [ -x "$hooks/inject-conventions.sh" ]; then
   out=$(printf '{"prompt":"改代码","cwd":"%s"}' "$proj" | "$hooks/inject-conventions.sh" 2>/dev/null)

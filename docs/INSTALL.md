@@ -24,7 +24,7 @@ rig/                  ← 整个包 = 一个 skill
     │   └── agents/                   code-reviewer / spec-author 子 agent
     └── project-layer/               → 项目内容（接入到某个 repo）
         ├── AGENTS.md / CLAUDE.md     地图+基线+指针 / @AGENTS.md
-        ├── .claude/commands/         /new-change /archive-change /adr /feature-spec /review
+        ├── .claude/commands/rig/     /rig:new-change /rig:archive-change /rig:adr /rig:feature-spec /rig:review /rig:learn
         ├── .claude/                  protected-paths.txt / settings.example.json（可选覆盖+红线）
         ├── scripts/                  lint-one.sh（语言适配）+ verify-local.sh（L0 自验证骨架）
         ├── docs/conventions/         规范全文（三桶分流）
@@ -61,7 +61,11 @@ cp assets/dotfiles-layer/agents/*.md ~/.claude/agents/
 [ -f ~/.claude/conventions.md ] || cp assets/dotfiles-layer/conventions.md ~/.claude/conventions.md
 # 合并 hooks 进 ~/.claude/settings.json（幂等、不覆盖既有 permissions/其它 hooks，自动备份 .bak）
 bash scripts/merge-settings.sh ~/.claude/settings.json assets/dotfiles-layer/settings.json
-# 开新会话使 hook 生效
+# 全局 /rig: 命令（init / doctor，任意项目可用；勿漏——这是接项目的入口）
+mkdir -p ~/.claude/commands && cp -R assets/dotfiles-layer/commands/* ~/.claude/commands/
+# 注册 rig skill（软链到克隆目录，AI 才发现得到）。$PWD 应是 rig 克隆根；若克隆本就在 ~/.claude/skills/rig 下则跳过此步
+mkdir -p ~/.claude/skills && ln -sfn "$PWD" ~/.claude/skills/rig
+# 开新会话使 hook 与 /rig: 命令生效
 ```
 建议把 `~/.claude/{hooks,settings.json,conventions.md}` 纳入个人 dotfiles git 仓库，换机器 clone 即可。
 
@@ -71,8 +75,8 @@ P=<项目根>
 # AGENTS.md / CLAUDE.md：不存在才拷；已存在则把模板里缺的章节【手动并入】，勿覆盖
 [ -f $P/AGENTS.md ] || cp assets/project-layer/AGENTS.md $P/AGENTS.md
 [ -f $P/CLAUDE.md ] || cp assets/project-layer/CLAUDE.md $P/CLAUDE.md   # 内容仅 @AGENTS.md
-# 脚本：语言适配器 + L0 自验证骨架
-mkdir -p $P/scripts && cp -n assets/project-layer/scripts/*.sh $P/scripts/ && chmod +x $P/scripts/*.sh
+# 脚本：语言适配器 + L0 自验证骨架（用 ; 分隔——macOS 上 cp -n 跳过已存在文件会返 1，用 && 会短路掉 chmod）
+mkdir -p $P/scripts; cp -n assets/project-layer/scripts/*.sh $P/scripts/ 2>/dev/null; chmod +x $P/scripts/*.sh
 # slash 命令 + 红线
 mkdir -p $P/.claude && cp -rn assets/project-layer/.claude/commands $P/.claude/
 cp -n assets/project-layer/.claude/protected-paths.txt $P/.claude/ 2>/dev/null

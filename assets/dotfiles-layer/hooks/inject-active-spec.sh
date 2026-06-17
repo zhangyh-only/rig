@@ -43,8 +43,8 @@ for d in "$changes_dir"/*/; do
     printf '%s\n' "$block"
     total=$(( total + ${#block} ))
   else
-    done_n="$(grep -c '\- \[[xX]\]' "${d}tasks.md" 2>/dev/null || echo 0)"
-    todo_n="$(grep -c '\- \[ \]' "${d}tasks.md" 2>/dev/null || echo 0)"
+    done_n="$(grep -c '\- \[[xX]\]' "${d}tasks.md" 2>/dev/null)"; done_n="${done_n:-0}"
+    todo_n="$(grep -c '\- \[ \]' "${d}tasks.md" 2>/dev/null)"; todo_n="${todo_n:-0}"
     echo "### 变更：${name}（摘要·已超注入上界，详见 openspec/changes/$name/）任务 ${done_n} 完成 / ${todo_n} 待办"
   fi
 done

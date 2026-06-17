@@ -21,7 +21,7 @@ empty_ok(){ [ -z "$2" ] && ok "$1" || no "$1" "期望空输出"; }
 build_sandbox(){   # $1 = with_verify_local (1/0)
   rm -rf "$SBX"
   mkdir -p "$SBX/docs/conventions" "$SBX/scripts" "$SBX/src/generated" \
-           "$SBX/openspec/changes/add-exclaim/specs/greeting" "$SBX/.claude"
+           "$SBX/openspec/changes/add-exclaim/specs/greeting" "$SBX/.claude/commands/rig"
   ( cd "$SBX" && git -c init.defaultBranch=main init -q && git config user.email e@x && git config user.name e )
   printf '# 编码约定（fixture）\n- [A桶] 禁止用 print() 调试输出。\n- [B桶] 函数命名用动词短语。\n' > "$SBX/docs/conventions/code.md"
   cat > "$SBX/scripts/lint-one.sh" <<'EOF'
