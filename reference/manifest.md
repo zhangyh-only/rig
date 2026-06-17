@@ -82,7 +82,7 @@
 | bash-version-and-shell | bash 可用且版本足够（macOS 自带 3.2） | command -v bash; bash --version | install-command | 必要时 brew install bash；或核对仅用 3.2 兼容语法 | false |
 | maven-runtime-and-plugins | Java 项目 mvn/gradle + checkstyle/surefire/archunit（仅 java 适用） | command -v mvn；pom grep 插件；或 gradlew | merge | pom 加 checkstyle 绑 verify；gradle 另适配 | false |
 | python-go-runtime | Python/Go 运行时及各自 linter（按 pyproject/go.mod 适用） | command -v python3/go；有 pyproject/go.mod 才要求 | install-command | brew/官方安装；不需要的语言不报缺 | false |
-| openspec-cli-available | openspec CLI（archive/validate/list 前提） | npx --no-install openspec --version \|\| command -v openspec | install-command | npm i -g openspec 或确保 npx 可联网 | false |
+| openspec-cli-available | openspec CLI（archive/validate/list 前提） | npx --no-install openspec --version \|\| command -v openspec | install-command | 缺则纳入批量征询问用户；同意即 `npm i -g openspec`，拒绝则标缺不铺 openspec/ | true |
 | codex-prereq-install | Codex CLI/App + ~/.codex（仅当适配 Codex 时） | which codex \|\| ls /Applications/Codex.app；test -d ~/.codex | install-command | brew/官方安装 + 首次登录；auth.json 不进同步 | true |
 | skill-sync-mechanism `[ready]` | skills 落地位置(默认工具自带目录 ~/.claude/skills;若用 cc-switch 等同步器才写同步源) | ls -la ~/.claude/skills/ \| grep '\->'；ls ~/.cc-switch/skills；grep skillSyncMethod | install-command | 默认直接装进 ~/.claude/skills(Claude);仅当该机确用 cc-switch 等同步器才改写同步源 | false |
 
