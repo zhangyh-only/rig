@@ -20,7 +20,11 @@ case "$f" in
       d="$(dirname "$d")"
     done
     [ -n "$pom" ] && grep -q checkstyle "$pom" 2>/dev/null || exit 0
-    ( cd "$(dirname "$pom")" && mvn -q -o checkstyle:check ) 2>&1
+    # 只查刚改的这个文件：checkstyle:check 默认扫【全模块】，会拦下所有存量违规、且每次编辑都全量跑，
+    # 与 lint-one「只检刚改的 $f」的本意冲突（存量靠"改到即收敛"或 CI 基线，不在每次编辑批量拦）。
+    # 取相对 source root 的路径喂 -Dcheckstyle.includes（假定 Maven 标准布局 src/main|test/java）。
+    rel="${f##*src/main/java/}"; [ "$rel" = "$f" ] && rel="${f##*src/test/java/}"
+    ( cd "$(dirname "$pom")" && mvn -q -o checkstyle:check -Dcheckstyle.includes="$rel" ) 2>&1
     ;;
   *.ts|*.tsx|*.js|*.jsx)
     command -v npx >/dev/null 2>&1 || exit 0
