@@ -17,6 +17,7 @@ no(){ _rec "FAIL  $1 — $2"; FAIL=$((FAIL+1)); }
 exit_is(){ [ "$2" = "$3" ] && ok "$1" || no "$1" "期望 exit $2，实得 $3"; }
 has(){ case "$3" in *"$2"*) ok "$1";; *) no "$1" "输出缺『$2』";; esac; }
 empty_ok(){ [ -z "$2" ] && ok "$1" || no "$1" "期望空输出"; }
+not_has(){ case "$3" in *"$2"*) no "$1" "不该含『$2』";; *) ok "$1";; esac; }
 
 build_sandbox(){   # $1 = with_verify_local (1/0)
   rm -rf "$SBX"
@@ -47,6 +48,7 @@ EOF
   printf 'def greet(name):\n    return f"Hello, {name}"\n' > "$SBX/src/greeting.py"
   echo "# 自动生成，勿改" > "$SBX/src/generated/auto.py"
   echo '*/generated/*' > "$SBX/.claude/protected-paths.txt"
+  printf '## 交流语言\n始终用简体中文回复（ALWAYS-FIXTURE）。\n' > "$SBX/.claude/conventions-always.md"  # always 注入层夹具（HOME 隔离用）
   printf '# add-exclaim\n## 目标\n给 greet 加感叹号。\n## 范围\n只改 src/greeting.py。\n' > "$SBX/openspec/changes/add-exclaim/proposal.md"
   printf -- '- [ ] 加感叹号\n- [ ] 自验证通过\n' > "$SBX/openspec/changes/add-exclaim/tasks.md"
   printf '## MODIFIED Requirements\n验收：greet("world") == "Hello, world!"\n' > "$SBX/openspec/changes/add-exclaim/specs/greeting/spec.md"
@@ -60,12 +62,14 @@ run_suite(){
   # ① hook 有没触发
   o="$(printf '{"cwd":"%s"}' "$SBX" | "$HOOKS/session-start.sh" 2>/dev/null)"
   has "① session-start 注入进行中变更" "进行中变更：add-exclaim" "$o"
-  o="$(printf '{"prompt":"修改 greeting 功能","cwd":"%s"}' "$SBX" | "$HOOKS/inject-conventions.sh" 2>/dev/null)"
-  has "① inject-conventions 注入规范全文" "禁止用 print()" "$o"
+  o="$(printf '{"prompt":"修改 greeting 功能","cwd":"%s"}' "$SBX" | HOME="$SBX" "$HOOKS/inject-conventions.sh" 2>/dev/null)"
+  has "① inject-conventions 编码:注入项目规范全文" "禁止用 print()" "$o"
+  has "① inject-conventions 编码:也注入 always 层（语言）" "ALWAYS-FIXTURE" "$o"
   o="$(printf '{"prompt":"修改 greeting 功能","cwd":"%s"}' "$SBX" | "$HOOKS/inject-active-spec.sh" 2>/dev/null)"
   has "① inject-active-spec 注入变更规格" "add-exclaim" "$o"
-  o="$(printf '{"prompt":"今天天气如何","cwd":"%s"}' "$SBX" | "$HOOKS/inject-conventions.sh" 2>/dev/null)"
-  empty_ok "① inject-conventions 对非编码 prompt 静默（失败降级）" "$o"
+  o="$(printf '{"prompt":"今天天气如何","cwd":"%s"}' "$SBX" | HOME="$SBX" "$HOOKS/inject-conventions.sh" 2>/dev/null)"
+  not_has "① inject-conventions 非编码:完整规范静默（失败降级）" "禁止用 print()" "$o"
+  has "① inject-conventions 非编码:always 层仍每轮注入（语言不漏）" "ALWAYS-FIXTURE" "$o"
 
   # ② 违规有没被抓
   printf 'def greet(name):\n    print("dbg", name)\n    return f"Hi, {name}!"\n' > "$SBX/src/greeting.py"

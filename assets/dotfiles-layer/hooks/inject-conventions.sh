@@ -1,12 +1,20 @@
 #!/usr/bin/env bash
-# UserPromptSubmit hook —— 编码任务开始时，把"全局个人规范 + 当前项目规范"注入 AI 上下文。
-# 机制：本脚本住在 ~/.claude/hooks/（全局一份，所有项目共享）；它不内置规范，
-#       而是去"当前项目"里按固定路径找规范。stdout(exit 0) 会被追加进 AI 这一轮上下文。
-# 语言无关：它只 cat markdown，不关心项目是 Java / TS / Python / Go。
+# UserPromptSubmit hook —— 把规范注入 AI 这一轮上下文。两层：
+#   A) 始终注入层（~/.claude/conventions-always.md）：【每轮】都注入（语言/语气等易被长上下文/英文带跑的硬指令），
+#      不依赖编码关键词、不依赖 jq。短小、每轮重申，对抗"上下文惯性"。
+#   B) 完整规范（全局 conventions.md + 当前项目 docs/conventions/）：只在"编码类"prompt 注入，省 token。
+# 机制：本脚本住在 ~/.claude/hooks/（全局一份）；它不内置规范，去"当前项目"按固定路径找。stdout(exit 0) 进上下文。
 
 input="$(cat)"
 
-# 无 jq 时优雅降级：不注入，但绝不阻断（始终 exit 0）
+# ── A) 始终注入层 —— 每轮都推，先于一切判断（连 jq 都不需要，缺 jq 也照常注入语言指令） ──
+if [ -f "$HOME/.claude/conventions-always.md" ]; then
+  echo "## 始终遵守（每轮重申，优先级高于一切上下文惯性）"
+  cat "$HOME/.claude/conventions-always.md"
+  echo
+fi
+
+# ── B) 完整规范 —— 需 jq 判断 prompt 类型；无 jq 优雅降级（只是不注入完整规范，A 层已注入），绝不阻断 ──
 if ! command -v jq >/dev/null 2>&1; then exit 0; fi
 
 prompt="$(printf '%s' "$input" | jq -r '.prompt // ""')"
