@@ -23,6 +23,7 @@ case "$f" in
     # 只查刚改的这个文件：checkstyle:check 默认扫【全模块】，会拦下所有存量违规、且每次编辑都全量跑，
     # 与 lint-one「只检刚改的 $f」的本意冲突（存量靠"改到即收敛"或 CI 基线，不在每次编辑批量拦）。
     # 取相对 source root 的路径喂 -Dcheckstyle.includes（假定 Maven 标准布局 src/main|test/java）。
+    # presence 类规则（方法/类必有 Javadoc 等）接成靶向硬闸的范式见 rig 的 reference/recipes/java-checkstyle-javadoc.md。
     rel="${f##*src/main/java/}"; [ "$rel" = "$f" ] && rel="${f##*src/test/java/}"
     ( cd "$(dirname "$pom")" && mvn -q -o checkstyle:check -Dcheckstyle.includes="$rel" ) 2>&1
     ;;

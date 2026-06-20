@@ -29,7 +29,7 @@ argument-hint: [可选：这次踩的坑/教训一句话]
 
 ## 三级 · 晋升（instinct → 进规则，**必须先问我**）
 当一条已是 `pattern`、且值得在**所有**同类场景强制时，按它属于哪桶提出晋升方案，**给出确切 diff、等我确认后再落**：
-- **A 桶（机器可判：命名 / 路径 / 禁某调用 / 依赖方向…）** → 提议在 `scripts/lint-one.sh`（必要时配 linter 配置）加一条检查，让它在改完文件时被 `lint-changed` 自动拦。最硬的兜底。
+- **A 桶（机器可判：命名 / 路径 / 禁某调用 / 依赖方向…）** → 提议在 `scripts/lint-one.sh`（必要时配 linter 配置）加一条检查，让它在改完文件时被 `lint-changed` 自动拦。最硬的兜底。（Java「方法/类必有 Javadoc」这类 presence 规则接 checkstyle 靶向硬闸的现成范式，见 rig 的 `reference/recipes/java-checkstyle-javadoc.md`。）
 - **B 桶（需判断：语义 / 风格 / 归属…）** → 提议在项目 `docs/conventions/code.md` 或 `structure.md` 加一行（会被 `inject-conventions` 在编码时注入）。仅当这条坑**跨项目都成立**，才提议进全局 `~/.claude/conventions.md`（注入所有项目）。
 
 晋升后：把 `docs/lessons.md` 里那条状态改 `instinct`，并注明晋升去向（哪条 lint / 哪份 conventions），原 lesson 条目保留作审计链。
