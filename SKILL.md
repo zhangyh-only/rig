@@ -31,9 +31,9 @@ description: 安装、迁移或更新这套"AI coding 分层工作流"（本地 
 
 ### 步骤 0 · 机器画像 + 加载 manifest + 探测现状
 1. **机器画像**：先跑 `bash scripts/detect-env.sh <项目根>`，拿到 OS/arch、包管理器、jq 等前置、已装 AI 工具(Claude/Codex/Cursor)、skills 同步方式(cc-switch?)、dotfiles 载体、项目语言矩阵。**`jq` 缺失是阻断级**——先补它，否则整套 hook 机制静默空转。
-2. **加载 manifest**：读 `reference/manifest.md`；按 `depends_on` 排序，用 `applies_when` 过滤不适用项（如预研/demo 跳过 openspec，标 N/A）。
+2. **加载 manifest**：读 `reference/manifest.md`；按 `depends_on` 排序，用 `applies_when` 过滤**机器/语言层面**真正不适用的项（如某语言工具链在本项目无对象、本机无该 AI 工具），标 N/A。**不得按「预研/demo」等项目画像字样自动把可选要素（如 openspec）判 N/A**——这类项是否启用一律进步骤 0.4 批量征询交用户拍板。
 3. **逐项 detect（四态）**：对每项跑其 detect，得 present/absent/incomplete/not-applicable。**区分 absent(缺) 与 incomplete(文件在但是占位符/空壳/不完整)**——后者走回填，不能当已存在跳过。
-4. **确认意图**：把现状报告给用户，问：装/更新全局机制？给当前项目接入？（默认都做）需联网/破坏/写敏感区的项按 `requires_consent` 汇总成**一次**批量征询。
+4. **确认意图**：把现状报告给用户，问：装/更新全局机制？给当前项目接入？（默认都做）需联网/破坏/写敏感区的项按 `requires_consent` 汇总成**一次**批量征询。**征询纪律**：对「按工作模式取舍」的项（如 openspec）给倾向性推荐前，**先按 `docs/DESIGN.md` §4.2 入口判据判工作模式**（需求驱动才上、改动驱动不上），不得用 §7 项目规模或「单仓自用」等画像字样代替判据；**工作模式判不出时中立呈现二选一、不预设推荐**。具体某项的取舍判据由 manifest 对应条目承载，本步只负责「先按判据判、不足则中立」这一通用动作。
 
 ### 步骤 1 · 补救 global 项（遍历 manifest 中 scope=global）
 按各自 `remediation_type` 分发，代表性动作：

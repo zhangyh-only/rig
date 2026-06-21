@@ -47,7 +47,7 @@
 | manifest-machine-profile `[ready]` | 机器画像探测层，据此为每项选 template-copy/install-command/跳过 | 跑 scripts/detect-env.sh 产出画像 | derive-from-code | 开场跑 detect-env.sh，结果供后续选策略 | true |
 | detect-tristate-and-applicability | detect 四态+applies_when，否则对 demo 报假缺失、对空壳报已存在 | 条目 detect 含四态与 applies_when | author-with-user | 固化退出码约定与适用性表达式 | true |
 | remediation-verify-and-rollback | 补后复验+失败回滚+dry-run，闭合幂等铁律 | 每项有 verify_after；有 --dry-run；merge 后 jq empty+permissions 不减 | author-with-user | 引擎统一 remediate→re-detect→pass记录/fail回滚 | true |
-| consent-and-network-gating-model | 把联网/破坏/写敏感区建模为 requires_consent，批量统一征询 | 条目有 requires_consent；写操作前有统一同意点 | author-with-user | 同类需许可项汇总一次批确认 | true |
+| consent-and-network-gating-model | 把联网/破坏/写敏感区建模为 requires_consent，批量统一征询（凡按工作模式取舍的征询项，给推荐前先按 DESIGN §4.2 判工作模式、不凭项目画像或规模拍，判不出则中立呈现二选一） | 条目有 requires_consent；写操作前有统一同意点 | author-with-user | 同类需许可项汇总一次批确认 | true |
 | installer-run-report-artifact `[declared]` | 结构化可重入报告 .rig/install-report.json，支持 --resume | 有报告产物且落盘 | template-copy | 每次运行写逐项状态，--resume 跳过已达成 | true |
 | installer-version-and-migration `[declared]` | 版本戳 + 跨版本增量迁移 | ~/.claude/.rig-version、项目 .rig/version 存在 | template-copy | 安装写版本戳；引擎按版本差跑 migrations/ | true |
 | package-manager-abstraction `[ready]` | install-command 按探测到的包管理器分发而非假定 brew | detect-env.sh 探测 brew/apt/dnf/pacman/winget；条目声明"包名"而非命令 | author-with-user | install-command 项声明包名，引擎按 profile 选命令；未知平台输出手动指引 | true |
@@ -82,7 +82,7 @@
 | bash-version-and-shell | bash 可用且版本足够（macOS 自带 3.2） | command -v bash; bash --version | install-command | 必要时 brew install bash；或核对仅用 3.2 兼容语法 | false |
 | maven-runtime-and-plugins | Java 项目 mvn/gradle + checkstyle/surefire/archunit（仅 java 适用） | command -v mvn；pom grep 插件；或 gradlew | merge | pom 加 checkstyle 绑 verify；gradle 另适配 | false |
 | python-go-runtime | Python/Go 运行时及各自 linter（按 pyproject/go.mod 适用） | command -v python3/go；有 pyproject/go.mod 才要求 | install-command | brew/官方安装；不需要的语言不报缺 | false |
-| openspec-cli-available | openspec CLI（archive/validate/list 前提） | npx --no-install openspec --version \|\| command -v openspec | install-command | 缺则纳入批量征询问用户；同意即 `npm i -g @fission-ai/openspec`，拒绝则标缺不铺 openspec/ | true |
+| openspec-cli-available | openspec CLI（archive/validate/list 前提） | npx --no-install openspec --version \|\| command -v openspec | install-command | 缺则纳入批量征询问用户（同 openspec-dir-initialized：征询前先按 §4.2 判工作模式、不凭项目画像）；同意即 `npm i -g @fission-ai/openspec`，拒绝则标缺不铺 openspec/ | true |
 | codex-prereq-install | Codex CLI/App + ~/.codex（仅当适配 Codex 时） | which codex \|\| ls /Applications/Codex.app；test -d ~/.codex | install-command | brew/官方安装 + 首次登录；auth.json 不进同步 | true |
 | skill-sync-mechanism `[ready]` | skills 落地位置(默认工具自带目录 ~/.claude/skills;若用 cc-switch 等同步器才写同步源) | ls -la ~/.claude/skills/ \| grep '\->'；ls ~/.cc-switch/skills；grep skillSyncMethod | install-command | 默认直接装进 ~/.claude/skills(Claude);仅当该机确用 cc-switch 等同步器才改写同步源 | false |
 
@@ -224,9 +224,9 @@
 
 | id | what | detect | remediation_type | remediation | templatable |
 |---|---|---|---|---|---|
-| openspec-dir-initialized | openspec/ 骨架（**是否启用由用户在批量征询里定，别按"预研"字样自动判 N/A**） | test -d openspec/changes && test -d openspec/specs && ( test -f openspec/config.yaml \|\| test -f openspec/project.md ) | install-command | 缺则进批量征询问用户：要→`npm i -g @fission-ai/openspec`（**裸 `openspec` 是 2019 占位空壳 v0.0.0，必须装 `@fission-ai/openspec`**）+ `openspec init --tools none --force .`（非交互）+ 拷 change 模板；不要→跳过不铺 | true |
+| openspec-dir-initialized | openspec/ 骨架（**是否启用由用户在批量征询里定，别按"预研"字样自动判 N/A；征询给推荐前先按 DESIGN §4.2 入口判据判工作模式——openspec 唯一该上的是"需求驱动"（收正式需求文档、要追溯 需求→delta→归档），"改动驱动"的日常开发不上；判取舍不得用 §7 项目规模/风险、也不得凭"单仓自用""业务系统大"等项目画像字样拍脑袋；工作模式判不出时中立呈现「启用/暂不启用」二选一、不预设推荐**） | test -d openspec/changes && test -d openspec/specs && ( test -f openspec/config.yaml \|\| test -f openspec/project.md ) | install-command | 缺则进批量征询问用户：要→`npm i -g @fission-ai/openspec`（**裸 `openspec` 是 2019 占位空壳 v0.0.0，必须装 `@fission-ai/openspec`**）+ `openspec init --tools none --force .`（非交互）+ 拷 change 模板；不要→跳过不铺 | true |
 | openspec-active-change-wellformed `[declared]` | 进行中 change 结构完整（proposal/tasks/spec-delta），不完整则注入残缺 | 遍历 changes/*/ 测三件套→incomplete | author-with-user | 脚手架补缺占位骨架并访谈填写；openspec validate <change> 作探测器 | true |
-| openspec-change-template `[ready]` | change 提案模板（proposal/tasks/spec-delta 骨架），解决"不知写什么" | ls assets/.../openspec/changes/_template | template-copy | **门控**：仅当用户在批量征询里同意启用 openspec 且 CLI 已装时，随 `openspec init` 一起拷入；用户不要或 CLI 缺则**不铺**。机械层 `rig init` 不再无条件铺 | true |
+| openspec-change-template `[ready]` | change 提案模板（proposal/tasks/spec-delta 骨架），解决"不知写什么" | ls assets/.../openspec/changes/_template | template-copy | **门控**：仅当用户在批量征询里同意启用 openspec（该征询须遵 openspec-dir-initialized：先按 §4.2 判工作模式、不凭项目画像）且 CLI 已装时，随 `openspec init` 一起拷入；用户不要或 CLI 缺则**不铺**。机械层 `rig init` 不再无条件铺 | true |
 | openspec-project-grounded | openspec 项目背景文件填真实信息非默认占位（**1.4.1=`config.yaml`，旧版=`project.md`**） | grep -qiE 'TODO\|<.*>\|占位' openspec/config.yaml 或 openspec/project.md →incomplete | derive-from-code | 从 AGENTS 地图+构建文件推导技术栈/命令回填，再访谈补约定 | false |
 | openspec-archive-lifecycle | 完成的 change 跑 archive（否则死 change 持续误注入膨胀上下文） | find changes 非 archive 子目录 tasks 全勾选却未归档→STALE | author-with-user | 归档约定文档+可选 Stop hook 提示；引导跑 openspec archive | true |
 | adr-dir-and-template `[ready]` | docs/adr/ + ADR 模板 + 空索引 README（why 唯一权威终点） | test -d docs/adr && ls docs/adr/0000-template.md | template-copy | assets 提供 ADR 模板（MADR 精简）+ README 空索引（首条从 0001 起，用 /adr 创建） | true |
