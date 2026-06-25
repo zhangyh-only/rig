@@ -175,7 +175,7 @@
 | global-conventions-single-source `[ready]` | ~/.claude/conventions.md 个人全局基线单一真相，被所有工具引用不复制 | test -f ~/.claude/conventions.md | template-copy | 不存在→拷模板；建立后让 Codex import、Cursor 派生形成单源多引用 | true |
 | cross-device-drift-check `[declared]` | canonical 与各工具派生物漂移检查 | test -x check-rules-drift.sh 或 verify 比对源指纹 | template-copy | 扩展 verify 或新增 check-rules-drift.sh 校验派生物源指纹未过期 | true |
 
-> **rule-sources 数组**（探测既有规则的来源，新工具只加一行）：`AGENTS.md` · `CLAUDE.md` · `.cursorrules` · `.cursor/rules/*.mdc` · `.github/copilot-instructions.md` · `.github/instructions/*` · `GEMINI.md` · `.windsurfrules` · `.clinerules` · `.aider.conf.yml` · `.continue/*` · `memory-bank/conventions/*` · `docs/conventions/*` · `README` 规范段。
+> **rule-sources 数组**（探测既有规则的来源，新工具只加一行）：`AGENTS.md` · `CLAUDE.md` · `.cursorrules` · `.cursor/rules/*.mdc` · `.github/copilot-instructions.md` · `.github/instructions/*` · `GEMINI.md` · `.windsurfrules` · `.clinerules` · `.aider.conf.yml` · `.continue/*` · `docs/conventions/*` · `README` 规范段。
 
 ---
 
@@ -231,7 +231,7 @@
 | openspec-archive-lifecycle | 完成的 change 跑 archive（否则死 change 持续误注入膨胀上下文） | find changes 非 archive 子目录 tasks 全勾选却未归档→STALE | author-with-user | 归档约定文档+可选 Stop hook 提示；引导跑 openspec archive | true |
 | adr-dir-and-template `[ready]` | docs/adr/ + ADR 模板 + 空索引 README（why 唯一权威终点） | test -d docs/adr && ls docs/adr/0000-template.md | template-copy | assets 提供 ADR 模板（MADR 精简）+ README 空索引（首条从 0001 起，用 /adr 创建） | true |
 | missing-adr-decisions-why | 已发生重大决策补写 ADR（散见 commit/PR/注释） | docs/adr 为空但代码/历史有明显架构决策 | author-with-user | 模板可拷；扫历史列候选决策让用户逐条确认补写（内容不可伪造） | true |
-| feature-specs-dir-exists | docs/feature-specs/ 目录（L3 落点+memory-bank 迁移目标） | test -d docs/feature-specs | organize-existing | mkdir + 迁旧 memory-bank/project/feature-specs（属 memory-bank 退役，迁后随整目录删除）；新建用 feature-spec skill derive | true |
+| feature-specs-dir-exists | docs/feature-specs/ 目录（L3 落点） | test -d docs/feature-specs | derive-from-code | mkdir docs/feature-specs；域文档用 feature-spec skill 新建（derive） | true |
 | missing-domain-design-docs | 业务域设计文档 docs/feature-specs/<domain>.md（as-built 真相） | docs/feature-specs 空但存在明显业务域 | derive-from-code | 调 feature-spec skill 新建模式扫码生成；安装器只检测+识别候选域+建目录+发起 | false |
 | missing-architecture-map-doc | docs/architecture.md（AGENTS 地图指向的模块详表，悬空则地图断在指针） | AGENTS grep 'docs/architecture.md' 但文件缺→incomplete | derive-from-code | 扫目录/模块/构建文件 derive 模块→职责→依赖草表交用户确认；或去掉悬空指针 | false |
 | plan-template `[ready]` | 计划模板（目标/范围/步骤/验收/受影响文件/回滚） | ls docs/plans/_template.md | template-copy | 新增 plan 模板含"验收标准必须可执行"栏 | true |
@@ -242,7 +242,7 @@
 
 ---
 
-## 类别 PC · 项目约定 / 红线 / gitignore / 迁移（scope=project）
+## 类别 PC · 项目约定 / 红线 / gitignore（scope=project）
 
 | id | what | detect | remediation_type | remediation | templatable |
 |---|---|---|---|---|---|
@@ -250,9 +250,7 @@
 | gitignore-covers-protected-and-secrets | .gitignore 覆盖生成物/构建产物/L0 本地产物/密钥，与 guard 红线一致 | test -f .gitignore；grep target/build/node_modules/dist/.env | merge | 幂等补缺失条目，与 protected-paths 一致，不删既有 | true |
 | gitignore-and-protectedpaths-cosource | 工作流本地产物（.rig/、install-report、.bak、@Profile(local)）进 gitignore 且与 protected 同源 | grep .rig/ install-report .bak 是否在 gitignore | merge | 幂等补工作流本地产物进 gitignore 与 protected，双向对齐 | true |
 | global-conventions-md-exists `[ready]` | ~/.claude/conventions.md 全局个人偏好（含 karpathy 四原则，inject 第一段） | test -f ~/.claude/conventions.md | template-copy | 不存在→拷模板；已存在→展示差异问合并不覆盖 | true |
-| stale-pointer-integrity | 交叉指针完整性（AGENTS→conventions/architecture/verify-local、feature-spec→ADR、CLAUDE→AGENTS）无悬空 | 解析相对路径与 @import 逐一 test -e | organize-existing | 报告所有悬空指针；按情况创建目标或修正/删除指针 | false |
-| memory-bank-legacy-not-migrated | 旧 memory-bank/ 退役：按映射迁到新结构后**整目录删除**（用户已退役该个人模式） | test -d memory-bank | organize-existing | conventions→docs/conventions 打桶标(以代码核对)、project/feature-specs→docs/feature-specs、project/{architecture,modules,tech-stack,runtime} 关键事实折进 AGENTS §1 地图(详细手写版不留)、tasks/+README 丢弃；迁完 `rm -rf memory-bank/`——用户已授权的标准退役动作，git 可找回、删除进 diff 可审 | false |
-| dotfiles-vcs-repo | ~/.claude 可移植部分有版本化 dotfiles 载体（否则换机只能手工重建） | git -C ~/.claude rev-parse \|\| which chezmoi stow yadm \|\| ls ~/dotfiles | author-with-user | 与用户确认载体（裸 git/chezmoi/stow），纳入 hooks/conventions/portable settings | false |
+| stale-pointer-integrity | 交叉指针完整性（AGENTS→conventions/architecture/verify-local、feature-spec→ADR、CLAUDE→AGENTS）无悬空 | 解析相对路径与 @import 逐一 test -e | organize-existing | 报告所有悬空指针；按情况创建目标或修正/删除指针 | false || dotfiles-vcs-repo | ~/.claude 可移植部分有版本化 dotfiles 载体（否则换机只能手工重建） | git -C ~/.claude rev-parse \|\| which chezmoi stow yadm \|\| ls ~/dotfiles | author-with-user | 与用户确认载体（裸 git/chezmoi/stow），纳入 hooks/conventions/portable settings | false |
 | dotfiles-secrets-gitignore `[ready]` | dotfiles 同步前 .gitignore 挡机密/机器态（auth.json/history.jsonl/sessions/telemetry/settings.local.json） | grep auth.json/history.jsonl/settings.local.json in <dotfiles>/.gitignore | template-copy | 拷固定黑名单 claude-dotfiles.gitignore 并 merge | true |
 | dotfiles-bootstrap-installer `[ready]` | 一键 bootstrap（拉 dotfiles→落地→merge→触发 skill 同步→verify，全程幂等） | ls <dotfiles>/{install.sh,bootstrap.sh,Brewfile} | template-copy | 提供 bootstrap.sh 模板，少量机器特定钩子留占位 | true |
 

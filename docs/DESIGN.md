@@ -120,7 +120,7 @@ purpose: 把"用什么 skill / 工作流怎么运转 / 新封装什么能力"的
 
 | 工具/能力 | 层 | 动作 | 说明 |
 |---|---|---|---|
-| memory-bank-manager | — | ✅ 已删 | 未过基线诊断；职责拆到 L0/L1/L3。已于 2026-06-15 删除 `~/.cc-switch/skills/memory-bank-manager`（项目内 `memory-bank/` 数据保留，待迁 feature-specs） |
+| memory-bank-manager | — | ✅ 已删 | 未过基线诊断；职责拆到 L0/L1/L3。已于 2026-06-15 删除 `~/.cc-switch/skills/memory-bank-manager`（存量项目内 `memory-bank/` 数据已按映射迁移并整目录删除，退役完成） |
 | superpowers | L2 | 保留（已装） | 变更流程：brainstorm/plan/execute/TDD（执行层，spec 之下） |
 | openspec | L2 | **采用（工具）** | 前向 spec 契约层；较大/跨模块/难回退的改动先起 change，详见 §15 |
 | feature-spec | L3 | 保留（不改触发） | 单一能力，手动发起；后向设计沉淀。触发改造后续再迭代 |
@@ -174,7 +174,7 @@ purpose: 把"用什么 skill / 工作流怎么运转 / 新封装什么能力"的
 - [ ] L1：AGENTS.md(canonical) + CLAUDE.md(@import) 结构；接入 karpathy 四原则
 - [ ] L4：配两个 hook gate（遵守度 lint / 完成度 verify-on-stop）+ 收尾 code-reviewer（偏离度/语义，`/review` 触发）
 - [ ] L3：ADR 模板；feature-spec 两处小改
-- [ ] 迁移：把项目内 `memory-bank/project/feature-specs/` 迁到 `docs/feature-specs/`
+- [x] 迁移：把项目内 `memory-bank/project/feature-specs/` 迁到 `docs/feature-specs/`（存量已全部迁移并删除，memory-bank 退役完成）
 
 ### 8.2 待决策/触发条件（防止过早引入）
 - **openspec**：✅ 已决定直接采用（工具）。`npx openspec init`；与 feature-spec 分工见 §15。

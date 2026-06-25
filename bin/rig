@@ -74,7 +74,7 @@ case "$cmd" in
     fi
     echo; echo "-- 项目骨架(幂等,不覆盖既有) --"; scaffold_project "$proj"; echo "  骨架已就位(已存在的未动)"
     echo; echo "-- 接下来交给 AI(读 SKILL.md 做判断性工作) --"
-    echo "  · 把既有规范(memory-bank/.cursorrules/…)归并进 docs/conventions 并打 A/B/C 三桶"
+    echo "  · 把既有规范(.cursorrules/copilot-instructions/…)归并进 docs/conventions 并打 A/B/C 三桶"
     echo "  · 从 pom/package.json 推导回填 AGENTS.md 的项目地图(build/test/run)"
     echo "  · 写 scripts/verify-local.sh 的真实命令(compile→test→smoke)"
     echo "  · 完成后跑  rig doctor  自检"
