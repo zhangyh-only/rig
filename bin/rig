@@ -24,7 +24,8 @@ rig —— 给 AI coding 供给纪律的分层 harness
 
 用法:
   rig init [--claude|--codex|--cursor] [项目目录]
-      检测 → 装全局机制(hooks/agents/settings,缺才装) → 铺项目骨架(幂等不覆盖)
+      默认 auto 检测本机已装 AI 工具并补齐适配；传 --claude/--codex/--cursor 则只处理指定工具
+      检测 → 装全局机制(hooks/agents/settings/hooks.json,缺才装) → 铺项目骨架(幂等不覆盖)
       判断性内容(归并既有规范 / 推导 AGENTS 地图 / 写 verify-local)交 AI 读 SKILL.md 完成
   rig doctor [项目目录]
       安装后自检:注入 / 红线拦 / 闸 / 失败降级
@@ -52,26 +53,156 @@ scaffold_project(){
   # 由 AI 在判断步骤处理(见 SKILL/init.md):需求驱动型 + CLI 在 → openspec init + 拷模板;否则标缺不铺。
 }
 
+install_shared_hooks(){
+  mkdir -p "$HOME/.rig/hooks"
+  cp "$SELF"/assets/dotfiles-layer/hooks/*.sh "$HOME/.rig/hooks/" && chmod +x "$HOME/.rig/hooks/"*.sh
+}
+
+write_codex_hooks_json(){
+  target="$1"
+  dir="$(dirname "$target")"
+  mkdir -p "$dir"
+  base="$target.base.$$"
+  tmp="$target.tmp.$$"
+  inject_cmd='bash "$HOME/.codex/hooks/inject-conventions.sh" --codex'
+  lint_cmd='bash "$HOME/.codex/hooks/lint-changed.sh" --codex'
+
+  if [ -f "$target" ]; then
+    if jq empty "$target" >/dev/null 2>&1; then
+      cp "$target" "$base"
+    else
+      echo "✗ $target 不是合法 JSON；为避免覆盖你的既有配置，已停止写入。" >&2
+      echo "  请先修复该文件后重跑 rig init --codex。" >&2
+      return 1
+    fi
+  else
+    printf '%s\n' '{"hooks":{}}' > "$base"
+  fi
+
+  if jq --arg inject "$inject_cmd" --arg lint "$lint_cmd" '
+    .hooks = (.hooks // {}) |
+    if ([.hooks.UserPromptSubmit[]?.hooks[]?.command] | index($inject)) then .
+    else
+      .hooks.UserPromptSubmit = ((.hooks.UserPromptSubmit // []) + [{
+        hooks:[{
+          type:"command",
+          command:$inject,
+          statusMessage:"注入项目规范...",
+          timeout:45
+        }]
+      }])
+    end |
+    if ([.hooks.PostToolUse[]?.hooks[]?.command] | index($lint)) then .
+    else
+      .hooks.PostToolUse = ((.hooks.PostToolUse // []) + [{
+        matcher:"apply_patch|Edit|Write|MultiEdit",
+        hooks:[{
+          type:"command",
+          command:$lint,
+          statusMessage:"按规范检查改动...",
+          timeout:45
+        }]
+      }])
+    end
+  ' "$base" > "$tmp"; then
+    mv "$tmp" "$target"
+    rm -f "$base"
+  else
+    rm -f "$base" "$tmp"
+    return 1
+  fi
+}
+
+install_codex_hooks(){
+  if ! command -v jq >/dev/null 2>&1; then
+    echo "✗ 缺 jq（阻断级）——Codex hooks.json 合并和 hook JSON 输出都依赖 jq。" >&2
+    echo "  先安装 jq 后重跑 rig init --codex。" >&2
+    return 1
+  fi
+
+  install_shared_hooks || return 1
+  mkdir -p "$HOME/.codex"
+
+  if [ -e "$HOME/.codex/hooks" ] && [ ! -L "$HOME/.codex/hooks" ]; then
+    mkdir -p "$HOME/.codex/hooks"
+    cp "$HOME"/.rig/hooks/*.sh "$HOME/.codex/hooks/" && chmod +x "$HOME/.codex/hooks/"*.sh
+  else
+    ln -sfn "$HOME/.rig/hooks" "$HOME/.codex/hooks"
+  fi
+
+  write_codex_hooks_json "$HOME/.codex/hooks.json"
+}
+
+tool_available(){
+  case "$1" in
+    claude) [ -d "$HOME/.claude" ] || command -v claude >/dev/null 2>&1 || command -v claude-code >/dev/null 2>&1 ;;
+    codex) [ -d "$HOME/.codex" ] || command -v codex >/dev/null 2>&1 || [ -d "/Applications/Codex.app" ] ;;
+    cursor) [ -d "$HOME/.cursor" ] || [ -d "/Applications/Cursor.app" ] ;;
+    *) return 1 ;;
+  esac
+}
+
+dedupe_tools(){
+  seen=""
+  for t in "$@"; do
+    case " $seen " in *" $t "*) ;; *) seen="$seen $t" ;; esac
+  done
+  printf '%s\n' "$seen" | sed 's/^ *//; s/ *$//'
+}
+
+detect_tools(){
+  found=""
+  for t in claude codex cursor; do
+    if tool_available "$t"; then found="$found $t"; fi
+  done
+  printf '%s\n' "$found" | sed 's/^ *//; s/ *$//'
+}
+
 case "$cmd" in
   -h|--help|help|"") usage ;;
   doctor) bash "$SELF/scripts/verify.sh" "${1:-$PWD}" ;;
   init)
-    tool="claude"; proj="$PWD"
+    requested_tools=""; proj="$PWD"
     for a in "$@"; do case "$a" in
-      --claude) tool=claude ;; --codex) tool=codex ;; --cursor) tool=cursor ;;
+      --claude) requested_tools="$requested_tools claude" ;; --codex) requested_tools="$requested_tools codex" ;; --cursor) requested_tools="$requested_tools cursor" ;;
       --*) echo "未知选项: $a" >&2; exit 1 ;;
       *) if [ -d "$a" ]; then proj="$(cd "$a" && pwd)"; else echo "rig init: 目录不存在: $a（别铺成半成品骨架）" >&2; exit 1; fi ;;
     esac; done
-    echo "== rig init · tool=$tool · project=$proj =="
+    if [ -n "$requested_tools" ]; then
+      tools="$(dedupe_tools $requested_tools)"
+      tool_label="$tools"
+    else
+      tools="$(detect_tools)"
+      tool_label="auto:${tools:-none}"
+    fi
+    echo "== rig init · tools=$tool_label · project=$proj =="
     echo; echo "-- 机器画像 --"; bash "$SELF/scripts/detect-env.sh" "$proj" | sed -n '1,12p'
     echo; echo "-- 全局机制 --"
-    if [ "$tool" = "claude" ]; then
-      if ! bash "$SELF/scripts/bootstrap.sh"; then
-        echo "⚠ 全局机制未装全(bootstrap 非零退出,见上 ↑)。项目骨架仍会铺,但 hook 机制要等你修好上面的问题(常见:装 jq)后重跑 rig init 才生效。" >&2
-      fi
-    else
-      echo "⚠ 目前只有 Claude 的全局 hook 机制完整。$tool 仅落 canonical(AGENTS/conventions)+CI 兜底、门禁不强制——先把 claude 跑通,$tool 后续补。跳过全局机制安装。"
+    if [ -z "$tools" ]; then
+      echo "  ⚠ 未检测到 Claude/Codex/Cursor；仅铺项目 canonical 骨架。"
     fi
+    for tool in $tools; do
+      case "$tool" in
+        claude)
+          if ! bash "$SELF/scripts/bootstrap.sh"; then
+            echo "⚠ Claude 全局机制未装全(bootstrap 非零退出,见上 ↑)。项目骨架仍会铺,但 hook 机制要等你修好上面的问题(常见:装 jq)后重跑 rig init 才生效。" >&2
+          fi
+          ;;
+        codex)
+          if install_codex_hooks; then
+            echo "  ✓ Codex 共享 hook 脚本已就位: ~/.rig/hooks"
+            echo "  ✓ Codex hook 入口已关联: ~/.codex/hooks"
+            echo "  ✓ Codex hook 注册已写入: ~/.codex/hooks.json"
+            echo "  ⚠ 首次使用需在 Codex 的 /hooks 中 review + trust 这些 command hook；脚本变更后需重新 trust。"
+          else
+            echo "⚠ Codex 全局机制未装全(见上 ↑)。项目骨架仍会铺,修好前置后重跑 rig init。" >&2
+          fi
+          ;;
+        cursor)
+          echo "  ⚠ Cursor 目前仅复用 canonical(AGENTS/conventions)+CI 兜底，工具侧规则派生后续补。"
+          ;;
+      esac
+    done
     echo; echo "-- 项目骨架(幂等,不覆盖既有) --"; scaffold_project "$proj"; echo "  骨架已就位(已存在的未动)"
     echo; echo "-- 接下来交给 AI(读 SKILL.md 做判断性工作) --"
     echo "  · 把既有规范(.cursorrules/copilot-instructions/…)归并进 docs/conventions 并打 A/B/C 三桶"

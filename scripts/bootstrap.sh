@@ -24,14 +24,17 @@ if ! command -v jq >/dev/null 2>&1; then
   echo "  (未做任何改动就退出,避免半装。)" >&2
   exit 1
 fi
-echo "== 0. 备份现有 ~/.claude（覆盖前留还原点；不存在的自动跳过）=="
-bash "$here/scripts/backup.sh" "$HOME/.claude/hooks" "$HOME/.claude/agents" "$HOME/.claude/commands" "$HOME/.claude/settings.json" "$HOME/.claude/conventions.md" 2>/dev/null || true
+echo "== 0. 备份现有全局机制（覆盖前留还原点；不存在的自动跳过）=="
+bash "$here/scripts/backup.sh" "$HOME/.rig/hooks" "$HOME/.claude/hooks" "$HOME/.claude/agents" "$HOME/.claude/commands" "$HOME/.claude/settings.json" "$HOME/.claude/conventions.md" 2>/dev/null || true
 echo "== 1. 机器画像 =="
 bash "$here/scripts/detect-env.sh" "$PWD" | sed -n '1,12p'
 echo "== 2. 装全局 hook =="
+mkdir -p "$HOME/.rig/hooks"
+cp "$here"/assets/dotfiles-layer/hooks/*.sh "$HOME/.rig/hooks/" && chmod +x "$HOME/.rig/hooks/"*.sh
+echo "  已拷 $(ls "$here"/assets/dotfiles-layer/hooks/*.sh | wc -l | tr -d ' ') 个 hook/辅助脚本到 ~/.rig/hooks（多工具共享源）"
 mkdir -p "$HOME/.claude/hooks"
 cp "$here"/assets/dotfiles-layer/hooks/*.sh "$HOME/.claude/hooks/" && chmod +x "$HOME/.claude/hooks/"*.sh
-echo "  已拷 $(ls "$here"/assets/dotfiles-layer/hooks/*.sh | wc -l | tr -d ' ') 个 hook"
+echo "  已同步到 ~/.claude/hooks（Claude Code 入口）"
 echo "== 2b. 装子 agent（code-reviewer / spec-author，/rig:review 等依赖）=="
 mkdir -p "$HOME/.claude/agents"
 cp "$here"/assets/dotfiles-layer/agents/*.md "$HOME/.claude/agents/"

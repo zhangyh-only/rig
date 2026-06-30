@@ -3,12 +3,20 @@
 # 机制：全局一份；它调用"当前项目"里的 scripts/lint-one.sh（语言适配器）。
 #       不通过则 exit 2，把问题清单（stderr）回灌给 AI，让它当场修——这仍是生成期纠错，不是最终 review。
 
+HOOK_MODE=claude
+[ "${1:-}" = "--codex" ] && HOOK_MODE=codex
+HOOK_EVENT=PostToolUse
+HOOK_DIR="$(cd "$(dirname "$0")" && pwd)"
+. "$HOOK_DIR/hook-emit.sh"
+
 input="$(cat)"
 command -v jq >/dev/null 2>&1 || exit 0
 
-file="$(printf '%s' "$input" | jq -r '.tool_input.file_path // .tool_input.path // ""')"
-proj="$(printf '%s' "$input" | jq -r '.cwd // ""')"
+file="$(printf '%s' "$input" | jq -r '.tool_input.file_path // .tool_input.path // ""' 2>/dev/null)"
+proj="$(printf '%s' "$input" | jq -r '.cwd // ""' 2>/dev/null)"
 [ -z "$proj" ] && proj="${CLAUDE_PROJECT_DIR:-$PWD}"
+[ -z "$file" ] && file="$(printf '%s' "$input" | jq -r '.tool_input.patch // .tool_input.input // ""' 2>/dev/null | sed -n 's/^\*\*\* Update File: //p; s/^\*\*\* Add File: //p' | head -n 1)"
+[ -z "$file" ] && file="$(git -C "$proj" diff --name-only --diff-filter=ACMRT 2>/dev/null | head -n 1)"
 [ -z "$file" ] && exit 0
 
 adapter="$proj/scripts/lint-one.sh"
@@ -17,11 +25,8 @@ adapter="$proj/scripts/lint-one.sh"
 
 out="$("$adapter" "$file" 2>&1)"; rc=$?
 if [ "$rc" -ne 0 ]; then
-  {
-    echo "❌ 规范检查未通过：$file"
-    echo "请按下列问题修正后再继续："
-    echo "$out"
-  } >&2
-  exit 2   # exit 2 → Claude Code 把 stderr 回灌给 AI 处理
+  emit_block "❌ 规范检查未通过：$file
+请按下列问题修正后再继续：
+$out"
 fi
 exit 0

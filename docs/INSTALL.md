@@ -15,11 +15,12 @@ rig/                  ← 整个包 = 一个 skill
 │   ├── bootstrap.sh                 新机一键装全局机制
 │   └── verify.sh                    安装后自检（注入/红线/settings/降级/新 hook）
 └── assets/
-    ├── dotfiles-layer/              → 全局机制（装到 ~/.claude）
+    ├── dotfiles-layer/              → 全局机制（共享到 ~/.rig/hooks，并接到各工具入口）
     │   ├── settings.json            hooks 片段（合并进 ~/.claude/settings.json）
     │   ├── conventions.md           → ~/.claude/conventions.md（全局个人偏好）
     │   ├── claude-dotfiles.gitignore  dotfiles 同步挡机密/机器态
-    │   ├── hooks/                    8 个：inject-conventions / inject-active-spec / lint-changed /
+    │   ├── hooks/                    8 个 hook + hook-emit 输出辅助：
+    │   │                             inject-conventions / inject-active-spec / lint-changed /
     │   │                             guard / guard-bash / verify-on-stop / session-start / session-end
     │   └── agents/                   code-reviewer / spec-author 子 agent
     └── project-layer/               → 项目内容（接入到某个 repo）
@@ -51,6 +52,10 @@ rig/                  ← 整个包 = 一个 skill
 
 ### 全局机制（每台机器一次）
 ```bash
+mkdir -p ~/.rig/hooks
+cp assets/dotfiles-layer/hooks/*.sh ~/.rig/hooks/
+chmod +x ~/.rig/hooks/*.sh
+# Claude Code 入口
 mkdir -p ~/.claude/hooks
 cp assets/dotfiles-layer/hooks/*.sh ~/.claude/hooks/
 chmod +x ~/.claude/hooks/*.sh
@@ -67,7 +72,26 @@ mkdir -p ~/.claude/commands && cp -R assets/dotfiles-layer/commands/* ~/.claude/
 mkdir -p ~/.claude/skills && ln -sfn "$PWD" ~/.claude/skills/rig
 # 开新会话使 hook 与 /rig: 命令生效
 ```
-建议把 `~/.claude/{hooks,settings.json,conventions.md}` 纳入个人 dotfiles git 仓库，换机器 clone 即可。
+建议把 `~/.rig/hooks` 与 `~/.claude/{settings.json,conventions.md}` 纳入个人 dotfiles git 仓库，换机器 clone 即可。
+
+### 多工具自动接线（推荐，每个项目一次）
+```bash
+# 在目标项目里运行；默认 auto 检测本机已有 Claude/Codex/Cursor 并补齐接线
+rig init <项目根>
+```
+它会：
+- 铺项目 canonical 骨架（`AGENTS.md`、`docs/conventions/`、`scripts/lint-one.sh` 等）；
+- 若检测到 Claude Code，更新 `~/.claude/hooks` 与 `~/.claude/settings.json`；
+- 若检测到 Codex，确保 `~/.codex/hooks -> ~/.rig/hooks`，并幂等合并 `~/.codex/hooks.json`；
+- 保留已有配置，不覆盖 `~/.codex/config.toml`。
+
+只想限定某个工具时再加参数：
+```bash
+rig init --claude <项目根>
+rig init --codex <项目根>
+```
+
+Codex 装完后在 Codex 里执行 `/hooks`，review 并 trust 新增的 command hook；脚本内容变更后需要重新 trust。
 
 ### 项目接入（每个项目一次，注意合并）
 ```bash
@@ -97,11 +121,13 @@ mkdir -p $P/openspec/changes && cp -rn assets/project-layer/openspec/changes/_te
 ## 验证（两条路径都适用）
 ```bash
 bash scripts/verify.sh <项目根>     # 六段检查：注入 / 红线拦 / 红线放 / settings 注册 / 失败降级 / 新 hook 行为
+bash test/codex-hooks.sh            # Codex 模拟事件 + rig init auto 多工具接线 + hooks.json 注册幂等测试
 # 地雷验收：故意写一行违规代码，确认 lint-changed.sh 拦回让 AI 修
 # 或 claude --debug 看 hook 触发
 ```
 
 ## 换 AI 工具（Codex / 通义灵码…）
 - 可平移：`docs/conventions/`、`scripts/lint-one.sh`、linter 配置、`AGENTS.md`、`openspec/`、CI。
-- 要换：`~/.claude/hooks` 的注入触发 → 新工具等价机制（Cursor 用 glob 规则；Codex 原生读 AGENTS.md）。
+- Codex：`rig init` 会自动检测并接最小 hook 闭环，配置在 `~/.codex/hooks.json`，首次需 `/hooks` trust；当前只覆盖规范注入 + 改后 lint，其他 Claude hook 后续按同一模式铺。
+- 其它工具：从共享源 `~/.rig/hooks` 接入新工具等价机制（Cursor 用 glob 规则）。
 - 不变：`mvn verify` / CI required check 与工具无关，照样兜底。

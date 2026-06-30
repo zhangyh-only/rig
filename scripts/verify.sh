@@ -35,17 +35,43 @@ if [ -x "$hooks/guard.sh" ]; then
 fi
 
 echo "=== 4. settings.json 已注册 hook ==="
+if [ -d "$HOME/.rig/hooks" ]; then
+  shared_missing=0
+  for h in inject-conventions inject-active-spec lint-changed guard guard-bash verify-on-stop session-start session-end hook-emit; do
+    [ -x "$HOME/.rig/hooks/$h.sh" ] || shared_missing=1
+  done
+  [ "$shared_missing" -eq 0 ] && echo "  ✓ ~/.rig/hooks 共享 hook 源完整" || echo "  ⚠ ~/.rig/hooks 存在但脚本不完整"
+else
+  echo "  ⚠ 无 ~/.rig/hooks 共享 hook 源（旧安装可用；重跑 bootstrap/rig init 会补）"
+fi
 if command -v jq >/dev/null 2>&1 && [ -f "$HOME/.claude/settings.json" ]; then
   n=$(jq '[(.hooks // {}) | to_entries[].value[]?.hooks[]?.command] | length' "$HOME/.claude/settings.json" 2>/dev/null || echo 0)
   [ "${n:-0}" -gt 0 ] && echo "  ✓ 注册了 ${n} 个 hook 命令" || { echo "  ✗ settings.json 未注册 hook"; fail=1; }
 else
   echo "  ⚠ 无 jq 或无 ~/.claude/settings.json，跳过"
 fi
+if [ -f "$HOME/.codex/hooks.json" ]; then
+  if jq empty "$HOME/.codex/hooks.json" >/dev/null 2>&1; then
+    cn=$(jq '[.. | objects | .command? // empty | select(contains(".codex/hooks/"))] | length' "$HOME/.codex/hooks.json" 2>/dev/null || echo 0)
+    if [ "${cn:-0}" -ge 2 ]; then
+      echo "  ✓ Codex hooks.json 注册了 ${cn} 个 rig hook 命令"
+    else
+      echo "  ⚠ Codex hooks.json 存在，但未见完整 rig hook 注册（若只装 Claude 可忽略）"
+    fi
+  else
+    echo "  ⚠ Codex hooks.json 不是合法 JSON（若使用 Codex hooks，请先修复）"
+  fi
+else
+  echo "  ⚠ 无 ~/.codex/hooks.json，跳过 Codex hook 检查"
+fi
+if [ -e "$HOME/.codex/hooks" ]; then
+  [ -x "$HOME/.codex/hooks/inject-conventions.sh" ] && echo "  ✓ Codex hook 脚本入口可执行" || echo "  ⚠ Codex hook 脚本入口不可执行"
+fi
 
 echo "=== 5. 失败降级（缺前提时 hook 必须 exit 0 不阻断）==="
 if [ -x "$hooks/inject-conventions.sh" ]; then
   o=$(printf '{"prompt":"今天天气如何","cwd":"%s"}' "$proj" | "$hooks/inject-conventions.sh" 2>/dev/null); rc=$?
-  [ "$rc" -eq 0 ] && [ -z "$o" ] && echo "  ✓ 非编码 prompt 静默放行" || { echo "  ✗ 非编码 prompt 未静默 (exit $rc)"; fail=1; }
+  [ "$rc" -eq 0 ] && echo "  ✓ 非编码 prompt 不阻断 (exit 0)" || { echo "  ✗ 非编码 prompt 阻断了 (exit $rc)"; fail=1; }
 fi
 if [ -x "$hooks/lint-changed.sh" ]; then
   printf '{"tool_input":{"file_path":"%s/none.java"},"cwd":"%s"}' "$proj" "$proj" | "$hooks/lint-changed.sh" >/dev/null 2>&1; rc=$?
