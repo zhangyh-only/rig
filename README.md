@@ -11,10 +11,10 @@
 ### A · 装一次（每台机器）
 ```bash
 git clone https://github.com/zhangyh-only/rig.git
-bash rig/scripts/bootstrap.sh        # 装 hooks/agents/全局 /rig: 命令/skill；自动先备份、幂等、settings 合并不覆盖
+bash rig/scripts/bootstrap.sh        # 装 ~/.rig 共享 hooks，并自动接 Claude/Codex；幂等、合并不覆盖
 bash rig/install.sh                  # 可选：把 rig 加进 PATH（模型 B 基本用不到）
 ```
-- 跑完**开一个新 Claude 会话**（hooks 与 `/rig:*` 命令在新会话才生效）。
+- 跑完**开一个新 Claude 会话**（hooks 与 `/rig:*` 命令在新会话才生效）；Codex 需要进 `/hooks` review + trust 新增 command hook。
 - 克隆目录别移走（skill 软链指向它）。
 - 不想碰终端？在任意会话里说「跑 `rig/scripts/bootstrap.sh` 把 rig 装进我的 ~/.claude」，让 AI 用 Bash 替你跑——效果一样。
 
@@ -81,4 +81,4 @@ bash test/demo-run.sh     # 带旁白地演示整条链跑一遍
 
 机制与内容齐备、脚本过 bash 3.2 + 功能测试；全链路已在隔离环境验过（`eval-demo` 15/15、3 次一致；`rig init` → 8 hooks + 输出辅助脚本 + 2 agents + 全局/项目 `/rig:*` + skill 软链；`doctor` 关键项全过）。
 
-`rig init` 默认 **auto 检测本机已装工具** 并补齐适配：Claude Code 走完整 hook/命令/skill 机制；Codex 已接入最小闭环，会写 `~/.codex/hooks.json`，让 `UserPromptSubmit` 注入规范、`PostToolUse` 在改完文件后跑 lint 并用 `decision:block` 回灌。`--claude` / `--codex` / `--cursor` 仅用于限定本次只处理某个工具。Codex 首次使用需在 `/hooks` 里 review + trust 这些 command hook；本机真实 `codex --version` 目前受 vendor 二进制 ENOENT 影响，端到端实机验证待 Codex 安装修复后补跑。**Cursor** 仍仅 canonical + CI 兜底。
+`bootstrap.sh` 和 `rig init` 都会 **auto 检测本机已装工具** 并补齐适配：Claude Code 走完整 hook/命令/skill 机制；Codex 已接入最小闭环，会写 `~/.codex/hooks.json`，让 `UserPromptSubmit` 注入规范、`PostToolUse` 在改完文件后跑 lint 并用 `decision:block` 回灌。`--claude` / `--codex` / `--cursor` 仅用于限定 `rig init` 本次只处理某个工具。Codex 首次使用需在 `/hooks` 里 review + trust 这些 command hook；本机真实 `codex --version` 目前受 vendor 二进制 ENOENT 影响，端到端实机验证待 Codex 安装修复后补跑。**Cursor** 仍仅 canonical + CI 兜底。

@@ -51,6 +51,13 @@ rig/                  ← 整个包 = 一个 skill
 ## 路径二：人工安装
 
 ### 全局机制（每台机器一次）
+推荐直接跑：
+```bash
+bash scripts/bootstrap.sh
+```
+它会安装 `~/.rig/hooks` 共享源，接好 Claude Code 入口；如果检测到 Codex，也会写 `~/.codex/hooks.json` 并关联 `~/.codex/hooks -> ~/.rig/hooks`。
+
+手工等价步骤如下：
 ```bash
 mkdir -p ~/.rig/hooks
 cp assets/dotfiles-layer/hooks/*.sh ~/.rig/hooks/
@@ -74,6 +81,15 @@ mkdir -p ~/.claude/skills && ln -sfn "$PWD" ~/.claude/skills/rig
 ```
 建议把 `~/.rig/hooks` 与 `~/.claude/{settings.json,conventions.md}` 纳入个人 dotfiles git 仓库，换机器 clone 即可。
 
+若本机有 Codex，继续接 Codex：
+```bash
+mkdir -p ~/.codex
+ln -sfn ~/.rig/hooks ~/.codex/hooks
+# 或直接用 rig/scripts/install-codex-hooks.sh 幂等合并 ~/.codex/hooks.json
+bash scripts/install-codex-hooks.sh
+```
+装完后在 Codex 里执行 `/hooks`，review 并 trust 新增的 command hook；脚本内容变更后需要重新 trust。
+
 ### 多工具自动接线（推荐，每个项目一次）
 ```bash
 # 在目标项目里运行；默认 auto 检测本机已有 Claude/Codex/Cursor 并补齐接线
@@ -91,7 +107,7 @@ rig init --claude <项目根>
 rig init --codex <项目根>
 ```
 
-Codex 装完后在 Codex 里执行 `/hooks`，review 并 trust 新增的 command hook；脚本内容变更后需要重新 trust。
+如果 bootstrap 已经检测到并接好了 Codex，这一步会看到已存在并跳过重复写入。
 
 ### 项目接入（每个项目一次，注意合并）
 ```bash

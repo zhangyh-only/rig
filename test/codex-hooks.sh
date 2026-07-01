@@ -123,5 +123,20 @@ if [ -f "$codex_only_home/.codex/hooks.json" ] && [ -L "$codex_only_home/.codex/
 else no "rig init(auto) Codex-only 仍依赖 Claude 路径"; fi
 
 echo
+echo "== bootstrap auto multi-tool =="
+boot_home="$tmp_root/bootstrap-home"
+mkdir -p "$boot_home/.claude" "$boot_home/.codex"
+boot_out="$(HOME="$boot_home" bash "$ROOT/scripts/bootstrap.sh" 2>&1)"; rc=$?
+if [ "$rc" -eq 0 ] && [ -x "$boot_home/.rig/hooks/hook-emit.sh" ] && [ -x "$boot_home/.claude/hooks/hook-emit.sh" ]; then
+  ok "bootstrap → 共享 hook 与 Claude 入口"
+else no "bootstrap 未补齐共享 hook/Claude 入口（rc=${rc-} out=${boot_out-}）"; fi
+if [ "$rc" -eq 0 ] && [ -L "$boot_home/.codex/hooks" ] && [ "$(readlink "$boot_home/.codex/hooks")" = "$boot_home/.rig/hooks" ] && jq empty "$boot_home/.codex/hooks.json" >/dev/null 2>&1; then
+  ok "bootstrap → 自动补 Codex hooks.json 与入口"
+else no "bootstrap 未自动补 Codex（rc=${rc-} out=${boot_out-}）"; fi
+if printf '%s' "$boot_out" | grep -q 'Codex hook 注册已写入'; then
+  ok "bootstrap → 输出明确包含 Codex 接线结果"
+else no "bootstrap 输出没有 Codex 接线结果"; fi
+
+echo
 echo "codex-hooks: $pass 过 / $fail 失败"
 [ "$fail" -eq 0 ]

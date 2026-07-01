@@ -53,84 +53,8 @@ scaffold_project(){
   # 由 AI 在判断步骤处理(见 SKILL/init.md):需求驱动型 + CLI 在 → openspec init + 拷模板;否则标缺不铺。
 }
 
-install_shared_hooks(){
-  mkdir -p "$HOME/.rig/hooks"
-  cp "$SELF"/assets/dotfiles-layer/hooks/*.sh "$HOME/.rig/hooks/" && chmod +x "$HOME/.rig/hooks/"*.sh
-}
-
-write_codex_hooks_json(){
-  target="$1"
-  dir="$(dirname "$target")"
-  mkdir -p "$dir"
-  base="$target.base.$$"
-  tmp="$target.tmp.$$"
-  inject_cmd='bash "$HOME/.codex/hooks/inject-conventions.sh" --codex'
-  lint_cmd='bash "$HOME/.codex/hooks/lint-changed.sh" --codex'
-
-  if [ -f "$target" ]; then
-    if jq empty "$target" >/dev/null 2>&1; then
-      cp "$target" "$base"
-    else
-      echo "✗ $target 不是合法 JSON；为避免覆盖你的既有配置，已停止写入。" >&2
-      echo "  请先修复该文件后重跑 rig init --codex。" >&2
-      return 1
-    fi
-  else
-    printf '%s\n' '{"hooks":{}}' > "$base"
-  fi
-
-  if jq --arg inject "$inject_cmd" --arg lint "$lint_cmd" '
-    .hooks = (.hooks // {}) |
-    if ([.hooks.UserPromptSubmit[]?.hooks[]?.command] | index($inject)) then .
-    else
-      .hooks.UserPromptSubmit = ((.hooks.UserPromptSubmit // []) + [{
-        hooks:[{
-          type:"command",
-          command:$inject,
-          statusMessage:"注入项目规范...",
-          timeout:45
-        }]
-      }])
-    end |
-    if ([.hooks.PostToolUse[]?.hooks[]?.command] | index($lint)) then .
-    else
-      .hooks.PostToolUse = ((.hooks.PostToolUse // []) + [{
-        matcher:"apply_patch|Edit|Write|MultiEdit",
-        hooks:[{
-          type:"command",
-          command:$lint,
-          statusMessage:"按规范检查改动...",
-          timeout:45
-        }]
-      }])
-    end
-  ' "$base" > "$tmp"; then
-    mv "$tmp" "$target"
-    rm -f "$base"
-  else
-    rm -f "$base" "$tmp"
-    return 1
-  fi
-}
-
 install_codex_hooks(){
-  if ! command -v jq >/dev/null 2>&1; then
-    echo "✗ 缺 jq（阻断级）——Codex hooks.json 合并和 hook JSON 输出都依赖 jq。" >&2
-    echo "  先安装 jq 后重跑 rig init --codex。" >&2
-    return 1
-  fi
-
-  install_shared_hooks || return 1
-  mkdir -p "$HOME/.codex"
-
-  if [ -e "$HOME/.codex/hooks" ] && [ ! -L "$HOME/.codex/hooks" ]; then
-    mkdir -p "$HOME/.codex/hooks"
-    cp "$HOME"/.rig/hooks/*.sh "$HOME/.codex/hooks/" && chmod +x "$HOME/.codex/hooks/"*.sh
-  else
-    ln -sfn "$HOME/.rig/hooks" "$HOME/.codex/hooks"
-  fi
-
-  write_codex_hooks_json "$HOME/.codex/hooks.json"
+  bash "$SELF/scripts/install-codex-hooks.sh"
 }
 
 tool_available(){
@@ -191,9 +115,6 @@ case "$cmd" in
         codex)
           if install_codex_hooks; then
             echo "  ✓ Codex 共享 hook 脚本已就位: ~/.rig/hooks"
-            echo "  ✓ Codex hook 入口已关联: ~/.codex/hooks"
-            echo "  ✓ Codex hook 注册已写入: ~/.codex/hooks.json"
-            echo "  ⚠ 首次使用需在 Codex 的 /hooks 中 review + trust 这些 command hook；脚本变更后需重新 trust。"
           else
             echo "⚠ Codex 全局机制未装全(见上 ↑)。项目骨架仍会铺,修好前置后重跑 rig init。" >&2
           fi

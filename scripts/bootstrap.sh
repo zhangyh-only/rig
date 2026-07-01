@@ -35,6 +35,15 @@ echo "  已拷 $(ls "$here"/assets/dotfiles-layer/hooks/*.sh | wc -l | tr -d ' '
 mkdir -p "$HOME/.claude/hooks"
 cp "$here"/assets/dotfiles-layer/hooks/*.sh "$HOME/.claude/hooks/" && chmod +x "$HOME/.claude/hooks/"*.sh
 echo "  已同步到 ~/.claude/hooks（Claude Code 入口）"
+if [ -d "$HOME/.codex" ] || command -v codex >/dev/null 2>&1 || [ -d "/Applications/Codex.app" ]; then
+  echo "== 2a. 装 Codex hook 接线（检测到 Codex）=="
+  if ! bash "$here/scripts/install-codex-hooks.sh"; then
+    echo "  ✗ Codex hook 接线失败（见上），Claude Code 安装继续；修复后可重跑 bootstrap 或 rig init。" >&2
+  fi
+else
+  echo "== 2a. Codex hook 接线 =="
+  echo "  未检测到 Codex，跳过（以后安装 Codex 后重跑 bootstrap 或 rig init 会自动补）"
+fi
 echo "== 2b. 装子 agent（code-reviewer / spec-author，/rig:review 等依赖）=="
 mkdir -p "$HOME/.claude/agents"
 cp "$here"/assets/dotfiles-layer/agents/*.md "$HOME/.claude/agents/"
@@ -64,5 +73,5 @@ else
   echo "  ✗ merge-settings 失败——hook 未注册，整套机制不会触发！把本段输出贴给我排查。" >&2
 fi
 if [ "$ok4" -eq 1 ]; then echo "== 完成 =="; else echo "== 未完成：第 4 步失败（见上 ✗），hook 不会生效，先修这一步 =="; fi
-echo "开新会话使 hook 与 /rig: 命令生效。建议把 ~/.claude/{hooks,agents,commands,settings.json,conventions.md} 纳入 dotfiles 仓库（用 assets/dotfiles-layer/claude-dotfiles.gitignore 挡机密）。"
+echo "开新会话使 Claude hook 与 /rig: 命令生效；Codex 需在 /hooks 中 review + trust 新增 command hook。建议把 ~/.rig/hooks 与 ~/.claude/{agents,commands,settings.json,conventions.md} 纳入 dotfiles 仓库（用 assets/dotfiles-layer/claude-dotfiles.gitignore 挡机密）。"
 [ "$ok4" -eq 1 ] || exit 1   # 半装时退非零,让调用方(rig init)能程序化感知

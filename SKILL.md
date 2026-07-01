@@ -20,7 +20,7 @@ description: 安装、迁移或更新这套"AI coding 分层工作流"（本地 
 - **期望终态清单（唯一数据源）**：`reference/manifest.md` —— 安装器遍历它逐项 `detect→remediate`。新增/调整工作流要素**只改此文件，不改流程**。
 - 全局机制：`assets/dotfiles-layer/`（共享 `hooks/` + Claude `settings.json` hooks 片段 + `conventions.md`；Codex 由 `rig init` 写 `~/.codex/hooks.json`）
 - 项目内容：`assets/project-layer/`（`AGENTS.md`/`CLAUDE.md` 模板 + `scripts/lint-one.sh` + `docs/conventions/` 模板 + `.claude/`）
-- **安装期助手**（skill 自己跑、非被装）：`scripts/detect-env.sh`（机器画像）、`scripts/merge-settings.sh`（幂等合并 settings）、`scripts/verify.sh`（自检）、`scripts/backup.sh`（覆盖前带时间戳备份）、`scripts/bootstrap.sh`（新机一键装全局机制）。
+- **安装期助手**（skill 自己跑、非被装）：`scripts/detect-env.sh`（机器画像）、`scripts/merge-settings.sh`（幂等合并 settings）、`scripts/install-codex-hooks.sh`（幂等合并 Codex hooks.json）、`scripts/verify.sh`（自检）、`scripts/backup.sh`（覆盖前带时间戳备份）、`scripts/bootstrap.sh`（新机一键装全局机制）。
 - **被装资产新增**：`assets/dotfiles-layer/hooks/`（8 个 hook：注入×2/lint/guard/guard-bash/verify-on-stop/session-start/session-end；另有 `hook-emit.sh` 输出辅助脚本）、`assets/dotfiles-layer/agents/`（code-reviewer / spec-author 子 agent）、`assets/dotfiles-layer/claude-dotfiles.gitignore`；`assets/project-layer/.claude/commands/`（new-change / archive-change / adr / feature-spec / review）、`scripts/verify-local.sh`（L0 自验证骨架）、`docs/adr/`、`docs/plans/`、`openspec/changes/_template/`、`.editorconfig`。这些都在 manifest 里有条目，引擎遍历时自动落地。
 
 ---
@@ -39,7 +39,7 @@ description: 安装、迁移或更新这套"AI coding 分层工作流"（本地 
 按各自 `remediation_type` 分发，代表性动作：
 - `template-copy`：拷 `assets/dotfiles-layer/hooks/*.sh` → `~/.rig/hooks/` 作为多工具共享源；同步到 `~/.claude/hooks/` 作为 Claude Code 入口；拷 `conventions.md`（已存在则展示差异问合并，不覆盖个人内容）。
 - `merge`：`bash scripts/merge-settings.sh ~/.claude/settings.json assets/dotfiles-layer/settings.json`（幂等去重、留 .bak、不丢既有 permissions）。
-- `codex merge`：若机器画像检测到 Codex，`rig init` 自动确保 `~/.codex/hooks -> ~/.rig/hooks`，并幂等合并 `~/.codex/hooks.json`；不改 `~/.codex/config.toml`，末尾提示 `/hooks` trust。
+- `codex merge`：若机器画像检测到 Codex，`bootstrap.sh` 与 `rig init` 都会自动调用 `scripts/install-codex-hooks.sh`，确保 `~/.codex/hooks -> ~/.rig/hooks`，并幂等合并 `~/.codex/hooks.json`；不改 `~/.codex/config.toml`，末尾提示 `/hooks` trust。
 - `install-command`：按机器画像选包管理器（**别假定 brew**）；装/补 skill 默认直接进工具自带 skills 目录(Claude=~/.claude/skills)；仅当该机用 cc-switch 等同步器才写同步源(detect-env 报告)。
 - 末尾固定提示：**hook 变更需开新会话生效**。
 
