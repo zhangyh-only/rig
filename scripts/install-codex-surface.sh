@@ -61,9 +61,16 @@ Report hook registration, Codex skill/action skill status, command surface statu
   write_skill "$base/rig-review" "rig-review" "Review the current change against rig conventions and verification expectations. Use when the user asks for /rig:review or rig review." "# Rig Review
 
 Review the current diff against \`AGENTS.md\`, \`docs/conventions/\`, active specs, and local verification requirements. Prioritize bugs, rule drift, missing tests, and honesty gaps. Run focused verification when safe."
-  write_skill "$base/rig-new-change" "rig-new-change" "Start a new spec/change workflow for rig-managed projects. Use when the user asks for /rig:new-change." "# Rig New Change
+  write_skill "$base/rig-new-change" "rig-new-change" "Only start a new rig/openspec change. Do not use for broad status analysis; route analysis requests to rig-review or ordinary project analysis." "# Rig New Change
 
-Create or prepare an openspec-style change only after confirming openspec is enabled for this project. If the CLI is missing, ask before installing \`@fission-ai/openspec\`. Keep the change grounded in the current project and user intent."
+This skill is a short router for creating a new change. It must not do a long silent repository analysis.
+
+Immediate routing:
+- If the user is not explicitly asking to create/start a change, respond immediately in Chinese: this request is not a \`rig-new-change\` task, and suggest \`rig-review\` or ordinary project analysis. Do not scan the repository first.
+- If the user asks to analyze current execution/status, route to \`rig-review\` or proceed as a normal analysis request after saying so.
+- If the user explicitly wants a new change, first say you will check whether openspec is enabled, then run only bounded checks: \`pwd\`, \`test -d openspec\`, \`test -f openspec/config.yaml\`, \`command -v openspec\`, and \`find openspec/changes -maxdepth 2 -type f\` when the directory exists.
+
+Create or prepare an openspec-style change only after confirming openspec is enabled for this project. If the CLI is missing, ask before installing \`@fission-ai/openspec\`. Do not run network installs without user confirmation."
   write_skill "$base/rig-archive-change" "rig-archive-change" "Archive or close an active rig/openspec change. Use when the user asks for /rig:archive-change." "# Rig Archive Change
 
 Validate the active change, confirm tasks are complete, run project verification, then archive according to the project's openspec workflow. Do not archive unfinished or unverified work."
