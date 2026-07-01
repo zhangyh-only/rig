@@ -78,6 +78,16 @@ Create or update a domain feature spec from current code, docs, tests, and user-
 Turn a confirmed pitfall into the right durable layer: lesson note, convention update, lint/guard rule, or ADR. Ask before promoting anything into hard rules."
 }
 
+cleanup_legacy_action_skills(){
+  base="$1"
+  for s in rig-init rig-doctor rig-review rig-new-change rig-archive-change rig-adr rig-feature-spec rig-learn; do
+    dir="$base/$s"
+    if [ -f "$dir/SKILL.md" ] && grep -q "^name: $s$" "$dir/SKILL.md" 2>/dev/null; then
+      rm -rf "$dir"
+    fi
+  done
+}
+
 write_marketplace(){
   target="$1"
   mkdir -p "$(dirname "$target")"
@@ -127,7 +137,7 @@ plugin_root="$HOME/.agents/plugins/rig"
 link_dir "$HOME/.codex/skills/rig"
 link_dir "$HOME/.agents/skills/rig"
 install_action_skills "$HOME/.codex/skills"
-install_action_skills "$HOME/.agents/skills"
+cleanup_legacy_action_skills "$HOME/.agents/skills"
 
 mkdir -p "$plugin_root/.codex-plugin" "$plugin_root/commands" "$plugin_root/skills" "$plugin_root/agents"
 cp "$here/assets/codex-plugin/.codex-plugin/plugin.json" "$plugin_root/.codex-plugin/plugin.json"
@@ -140,5 +150,6 @@ write_marketplace "$HOME/.agents/plugins/marketplace.json"
 echo "  ✓ Codex skill 已注册: ~/.codex/skills/rig -> $here"
 echo "  ✓ Codex skill 已注册: ~/.agents/skills/rig -> $here"
 echo "  ✓ Codex action skills 已安装: rig-init / rig-doctor / rig-review / ..."
+echo "  ✓ 已清理 ~/.agents/skills/rig-* 旧副本，避免 Codex App 重复显示"
 echo "  ✓ Codex /rig:init command surface 已安装: ~/.agents/plugins/rig"
 echo "  ✓ Codex plugin marketplace 已登记: ~/.agents/plugins/marketplace.json"

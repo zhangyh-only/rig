@@ -84,10 +84,18 @@ if [ -d "$HOME/.codex" ] || [ -d "$HOME/.agents/plugins/rig" ]; then
     echo "  ⚠ Codex /rig:* command surface 未安装"
   fi
   action_missing=0
+  action_duplicate=0
   for s in rig-init rig-doctor rig-review rig-new-change rig-archive-change rig-adr rig-feature-spec rig-learn; do
-    [ -f "$HOME/.codex/skills/$s/SKILL.md" ] && [ -f "$HOME/.agents/skills/$s/SKILL.md" ] || action_missing=1
+    [ -f "$HOME/.codex/skills/$s/SKILL.md" ] || action_missing=1
+    [ -e "$HOME/.agents/skills/$s" ] && action_duplicate=1
   done
-  [ "$action_missing" -eq 0 ] && echo "  ✓ Codex action skills 已安装" || echo "  ⚠ Codex action skills 未安装完整"
+  if [ "$action_missing" -eq 0 ] && [ "$action_duplicate" -eq 0 ]; then
+    echo "  ✓ Codex action skills 已单路安装（无重复显示）"
+  elif [ "$action_missing" -eq 0 ]; then
+    echo "  ⚠ Codex action skills 存在重复副本，重跑 bootstrap 可清理"
+  else
+    echo "  ⚠ Codex action skills 未安装完整"
+  fi
   if [ -f "$HOME/.agents/plugins/marketplace.json" ] && jq -e '.plugins[]? | select(.name=="rig" and .policy.authentication=="ON_USE")' "$HOME/.agents/plugins/marketplace.json" >/dev/null 2>&1; then
     echo "  ✓ Codex Rig plugin marketplace 使用 ON_USE（不会安装时触发连接）"
   else

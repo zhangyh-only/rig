@@ -100,11 +100,11 @@ if [ -f "$home/.agents/plugins/rig/.codex-plugin/plugin.json" ] && [ -f "$home/.
 else no "rig init --codex 未安装 Codex plugin command surface"; fi
 action_missing=0
 for s in rig-init rig-doctor rig-review rig-new-change rig-archive-change rig-adr rig-feature-spec rig-learn; do
-  [ -f "$home/.codex/skills/$s/SKILL.md" ] && [ -f "$home/.agents/skills/$s/SKILL.md" ] || action_missing=1
+  [ -f "$home/.codex/skills/$s/SKILL.md" ] && [ ! -e "$home/.agents/skills/$s" ] || action_missing=1
 done
 if [ "$action_missing" -eq 0 ]; then
-  ok "rig init --codex → Codex action skills 已安装"
-else no "rig init --codex 未安装 Codex action skills"; fi
+  ok "rig init --codex → Codex action skills 单路安装"
+else no "rig init --codex action skills 缺失或重复安装"; fi
 if jq -e '.plugins[] | select(.name=="rig" and .source.path=="./plugins/rig" and .policy.authentication=="ON_USE")' "$home/.agents/plugins/marketplace.json" >/dev/null 2>&1; then
   ok "rig init --codex → marketplace 已登记 rig plugin"
 else no "rig init --codex 未以 ON_USE 登记 rig plugin marketplace"; fi
@@ -152,8 +152,8 @@ else no "bootstrap 未自动补 Codex（rc=${rc-} out=${boot_out-}）"; fi
 if [ "$rc" -eq 0 ] && [ -L "$boot_home/.codex/skills/rig" ] && [ -f "$boot_home/.agents/plugins/rig/commands/init.md" ]; then
   ok "bootstrap → 自动补 Codex skill 与 /rig:* command surface"
 else no "bootstrap 未自动补 Codex skill/command surface（rc=${rc-} out=${boot_out-}）"; fi
-if [ "$rc" -eq 0 ] && [ -f "$boot_home/.codex/skills/rig-init/SKILL.md" ] && [ -f "$boot_home/.codex/skills/rig-doctor/SKILL.md" ]; then
-  ok "bootstrap → 自动补 Codex action skills"
+if [ "$rc" -eq 0 ] && [ -f "$boot_home/.codex/skills/rig-init/SKILL.md" ] && [ -f "$boot_home/.codex/skills/rig-doctor/SKILL.md" ] && [ ! -e "$boot_home/.agents/skills/rig-init" ]; then
+  ok "bootstrap → 自动补 Codex action skills 且不重复显示"
 else no "bootstrap 未自动补 Codex action skills（rc=${rc-} out=${boot_out-}）"; fi
 if printf '%s' "$boot_out" | grep -q 'Codex skill 已注册' && printf '%s' "$boot_out" | grep -q 'Codex /rig:init command surface'; then
   ok "bootstrap → 输出明确包含 Codex skill/command 接线结果"

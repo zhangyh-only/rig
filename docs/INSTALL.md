@@ -42,7 +42,7 @@ rig/                  ← 整个包 = 一个 skill
 
 1. 先把整个 `rig/` 放到一台机器上的稳定目录（例如 `~/rig`），然后执行 `bash scripts/bootstrap.sh`。它会按本机已安装的 AI coding 工具自动接线：
    - Claude Code：`~/.claude/skills/rig`、`~/.claude/commands/rig/*`、`~/.claude/hooks`、`~/.claude/settings.json`
-   - Codex：`~/.codex/skills/rig`、`~/.agents/skills/rig`、`~/.codex/skills/rig-*`、`~/.agents/skills/rig-*`、`~/.agents/plugins/rig`、`~/.codex/hooks.json`
+   - Codex：`~/.codex/skills/rig`、`~/.agents/skills/rig`、`~/.codex/skills/rig-*`、`~/.agents/plugins/rig`、`~/.codex/hooks.json`
    - 若用 cc-switch 等同步器，再按你的同步策略把该目录纳入同步源。
 2. 开一个新 AI 工具会话，在**目标项目**里执行 `/rig:init`。
 3. AI 会按 `SKILL.md`：探测现状 → 问你装全局机制 / 接入本项目 → **合并**（不覆盖）安装 → **整理**项目已有规范 → 补齐缺失 skills/工具 → 跑验证并报告。
