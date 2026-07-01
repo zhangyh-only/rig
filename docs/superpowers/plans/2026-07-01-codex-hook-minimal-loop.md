@@ -143,7 +143,7 @@ Replace the placeholder message with:
 ```bash
 install_codex_hooks
 echo "  ✓ Codex hooks 已写入 ~/.codex/hooks.json"
-echo "  Codex 首次使用需在 /hooks 中 review + trust 这些 command hook；脚本变更后需重新 trust。"
+echo "  Codex CLI 首次使用需在 /hooks 中 review + trust；Codex Desktop App 当前普通会话不支持 /hooks，若客户端提示 hook 待信任，请按提示处理。"
 ```
 
 - [ ] **Step 5: Verify idempotency**
@@ -164,7 +164,7 @@ Extend `verify.sh` to report `~/.codex/hooks.json` status when it exists, withou
 
 - [ ] **Step 2: Update public docs**
 
-Change the status text that says Codex is only canonical/CI fallback. Document `rig init --codex`, the `~/.codex/hooks.json` location, and the `/hooks` trust step.
+Change the status text that says Codex is only canonical/CI fallback. Document `rig init --codex`, the `~/.codex/hooks.json` location, and the fact that `/hooks` trust is a Codex CLI flow rather than a Codex Desktop App chat message.
 
 - [ ] **Step 3: Final verification**
 

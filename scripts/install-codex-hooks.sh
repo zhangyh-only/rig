@@ -86,4 +86,4 @@ fi
 
 write_codex_hooks_json "$HOME/.codex/hooks.json"
 echo "  ✓ Codex hook 注册已写入: ~/.codex/hooks.json"
-echo "  ⚠ Codex 首次使用需在 /hooks 中 review + trust；脚本变更后需重新 trust。"
+echo "  ⚠ Codex CLI 首次使用需在 /hooks 中 review + trust；Codex Desktop App 当前普通会话不支持 /hooks，若客户端提示 hook 待信任，请按提示处理。"

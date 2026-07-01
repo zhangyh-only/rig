@@ -73,5 +73,5 @@ else
   echo "  ✗ merge-settings 失败——hook 未注册，整套机制不会触发！把本段输出贴给我排查。" >&2
 fi
 if [ "$ok4" -eq 1 ]; then echo "== 完成 =="; else echo "== 未完成：第 4 步失败（见上 ✗），hook 不会生效，先修这一步 =="; fi
-echo "开新会话使 Claude hook 与 /rig: 命令生效；Codex 需在 /hooks 中 review + trust 新增 command hook。建议把 ~/.rig/hooks 与 ~/.claude/{agents,commands,settings.json,conventions.md} 纳入 dotfiles 仓库（用 assets/dotfiles-layer/claude-dotfiles.gitignore 挡机密）。"
+echo "开新会话使 Claude hook 与 /rig: 命令生效；Codex CLI 如提示 hook 待信任，用 /hooks review + trust；Codex Desktop App 当前普通会话不支持 /hooks。建议把 ~/.rig/hooks 与 ~/.claude/{agents,commands,settings.json,conventions.md} 纳入 dotfiles 仓库（用 assets/dotfiles-layer/claude-dotfiles.gitignore 挡机密）。"
 [ "$ok4" -eq 1 ] || exit 1   # 半装时退非零,让调用方(rig init)能程序化感知

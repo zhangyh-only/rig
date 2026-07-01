@@ -97,7 +97,7 @@ scope: 让 rig init --codex 真正给 Codex 装"编码前注入规范 + 改完 l
 
 ## 8. trust（Codex 特有，安装必告知）
 
-Codex 非 managed 的 command hook 首次要在 `/hooks` 里 review + 信任（按 SHA hash；脚本变更需重新信任）。安装末尾**必须打印提示**，否则"装了不生效"。
+Codex CLI 中，非 managed 的 command hook 首次要在 `/hooks` 里 review + 信任（按 SHA hash；脚本变更需重新信任）。Codex Desktop App 当前普通会话不支持 `/hooks`，安装末尾必须把 CLI 与 Desktop 入口差异说清楚，否则容易出现"把 /hooks 当聊天消息发送"的误导。
 
 ## 9. `bin/rig --codex` 改动
 
