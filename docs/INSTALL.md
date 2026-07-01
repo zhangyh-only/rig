@@ -11,6 +11,8 @@ rig/                  ← 整个包 = 一个 skill
 ├── scripts/                         安装期助手（skill 自己跑，非被装）
 │   ├── detect-env.sh                机器画像：OS/包管理器/jq/已装工具/cc-switch/语言矩阵
 │   ├── merge-settings.sh            幂等合并 hooks 进 settings.json，不覆盖既有
+│   ├── install-codex-hooks.sh        幂等合并 Codex hooks.json
+│   ├── install-codex-surface.sh      注册 Codex skill + 本地 /rig:* command surface
 │   ├── backup.sh                    覆盖前带时间戳备份
 │   ├── bootstrap.sh                 新机一键装全局机制
 │   └── verify.sh                    安装后自检（注入/红线/settings/降级/新 hook）
@@ -38,13 +40,14 @@ rig/                  ← 整个包 = 一个 skill
 
 ## 路径一：AI 辅助安装（推荐，一步到位）
 
-1. 把整个 `rig/` 复制进你的 skills 目录：
-   - 标准 Claude Code：`~/.claude/skills/rig/`
-   - 若用 cc-switch：`~/.cc-switch/skills/rig/`
-2. 开一个新会话，在**目标项目**里对 AI 说：「**安装这套 AI coding 工作流**」。
+1. 先把整个 `rig/` 放到一台机器上的稳定目录（例如 `~/rig`），然后执行 `bash scripts/bootstrap.sh`。它会按本机已安装的 AI coding 工具自动接线：
+   - Claude Code：`~/.claude/skills/rig`、`~/.claude/commands/rig/*`、`~/.claude/hooks`、`~/.claude/settings.json`
+   - Codex：`~/.codex/skills/rig`、`~/.agents/skills/rig`、`~/.agents/plugins/rig`、`~/.codex/hooks.json`
+   - 若用 cc-switch 等同步器，再按你的同步策略把该目录纳入同步源。
+2. 开一个新 AI 工具会话，在**目标项目**里执行 `/rig:init`。
 3. AI 会按 `SKILL.md`：探测现状 → 问你装全局机制 / 接入本项目 → **合并**（不覆盖）安装 → **整理**项目已有规范 → 补齐缺失 skills/工具 → 跑验证并报告。
 
-> 换新设备：第 1 步复制一次，之后每个项目里说一句"安装工作流"即可——全局机制装一次、项目内容逐个接入，都自动幂等处理。
+> 换新设备：第 1 步复制并 bootstrap 一次；之后每个项目、每个要使用的 AI 工具里跑一次 `/rig:init`。全局机制装一次，项目内容和工具侧接线逐个幂等处理。
 
 ---
 
@@ -55,7 +58,7 @@ rig/                  ← 整个包 = 一个 skill
 ```bash
 bash scripts/bootstrap.sh
 ```
-它会安装 `~/.rig/hooks` 共享源，接好 Claude Code 入口；如果检测到 Codex，也会写 `~/.codex/hooks.json` 并关联 `~/.codex/hooks -> ~/.rig/hooks`。
+它会安装 `~/.rig/hooks` 共享源，接好 Claude Code 入口；如果检测到 Codex，也会写 `~/.codex/hooks.json`、关联 `~/.codex/hooks -> ~/.rig/hooks`，并注册 Codex 的 skill 与本地 `/rig:*` command surface。
 
 手工等价步骤如下：
 ```bash
@@ -85,10 +88,12 @@ mkdir -p ~/.claude/skills && ln -sfn "$PWD" ~/.claude/skills/rig
 ```bash
 mkdir -p ~/.codex
 ln -sfn ~/.rig/hooks ~/.codex/hooks
-# 或直接用 rig/scripts/install-codex-hooks.sh 幂等合并 ~/.codex/hooks.json
+# 或直接用脚本幂等合并 ~/.codex/hooks.json
 bash scripts/install-codex-hooks.sh
+# 注册 Codex skill 与本地 plugin command surface（提供 /rig:init / /rig:doctor）
+bash scripts/install-codex-surface.sh
 ```
-装完后，Codex CLI 如提示 hook 待信任，在 CLI 中执行 `/hooks`，review 并 trust 新增的 command hook；脚本内容变更后需要重新 trust。Codex Desktop App 当前普通会话不支持 `/hooks`，不要把它当聊天消息发送；若客户端出现 hook 信任提示，按提示处理。
+装完后，开新 Codex 会话让 skill/command 重新加载；Codex CLI 如提示 hook 待信任，在 CLI 中执行 `/hooks`，review 并 trust 新增的 command hook；脚本内容变更后需要重新 trust。Codex Desktop App 当前普通会话不支持 `/hooks`，不要把它当聊天消息发送；若客户端出现 hook 信任提示，按提示处理。
 
 ### 多工具自动接线（推荐，每个项目一次）
 ```bash
@@ -98,7 +103,7 @@ rig init <项目根>
 它会：
 - 铺项目 canonical 骨架（`AGENTS.md`、`docs/conventions/`、`scripts/lint-one.sh` 等）；
 - 若检测到 Claude Code，更新 `~/.claude/hooks` 与 `~/.claude/settings.json`；
-- 若检测到 Codex，确保 `~/.codex/hooks -> ~/.rig/hooks`，并幂等合并 `~/.codex/hooks.json`；
+- 若检测到 Codex，确保 `~/.codex/hooks -> ~/.rig/hooks`，幂等合并 `~/.codex/hooks.json`，并注册 `~/.codex/skills/rig`、`~/.agents/skills/rig`、`~/.agents/plugins/rig`；
 - 保留已有配置，不覆盖 `~/.codex/config.toml`。
 
 只想限定某个工具时再加参数：
@@ -108,6 +113,8 @@ rig init --codex <项目根>
 ```
 
 如果 bootstrap 已经检测到并接好了 Codex，这一步会看到已存在并跳过重复写入。
+
+注意：`rig init` 的机械层可以在终端跑，但推荐在**当前要使用的 AI 工具**里跑 `/rig:init`。同一个项目如果从 Claude Code 切到 Codex，也要在 Codex 里再跑一次 `/rig:init`，因为项目骨架虽然可复用，工具侧 hook/skill/command 入口和信任状态必须按当前工具会话补齐。
 
 ### 项目接入（每个项目一次，注意合并）
 ```bash
@@ -137,13 +144,13 @@ mkdir -p $P/openspec/changes && cp -rn assets/project-layer/openspec/changes/_te
 ## 验证（两条路径都适用）
 ```bash
 bash scripts/verify.sh <项目根>     # 六段检查：注入 / 红线拦 / 红线放 / settings 注册 / 失败降级 / 新 hook 行为
-bash test/codex-hooks.sh            # Codex 模拟事件 + rig init auto 多工具接线 + hooks.json 注册幂等测试
+bash test/codex-hooks.sh            # Codex 模拟事件 + skill/command surface + rig init auto 多工具接线 + hooks.json 注册幂等测试
 # 地雷验收：故意写一行违规代码，确认 lint-changed.sh 拦回让 AI 修
 # 或 claude --debug 看 hook 触发
 ```
 
 ## 换 AI 工具（Codex / 通义灵码…）
 - 可平移：`docs/conventions/`、`scripts/lint-one.sh`、linter 配置、`AGENTS.md`、`openspec/`、CI。
-- Codex：`rig init` 会自动检测并接最小 hook 闭环，配置在 `~/.codex/hooks.json`；Codex CLI 用 `/hooks` 管理 trust，Desktop App 当前普通会话不支持该 slash command；当前只覆盖规范注入 + 改后 lint，其他 Claude hook 后续按同一模式铺。
+- Codex：`rig init` 会自动检测并接 hook 闭环，配置在 `~/.codex/hooks.json`；同时注册 `~/.codex/skills/rig`、`~/.agents/skills/rig` 与 `~/.agents/plugins/rig`，用于在 Codex 会话中发现 rig skill 和 `/rig:init` / `/rig:doctor`。Codex CLI 用 `/hooks` 管理 hook trust，Desktop App 当前普通会话不支持该 slash command；当前 hook 覆盖规范注入 + 改后 lint，其他 Claude hook 后续按同一模式铺。
 - 其它工具：从共享源 `~/.rig/hooks` 接入新工具等价机制（Cursor 用 glob 规则）。
 - 不变：`mvn verify` / CI required check 与工具无关，照样兜底。

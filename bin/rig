@@ -57,6 +57,10 @@ install_codex_hooks(){
   bash "$SELF/scripts/install-codex-hooks.sh"
 }
 
+install_codex_surface(){
+  bash "$SELF/scripts/install-codex-surface.sh"
+}
+
 tool_available(){
   case "$1" in
     claude) [ -d "$HOME/.claude" ] || command -v claude >/dev/null 2>&1 || command -v claude-code >/dev/null 2>&1 ;;
@@ -113,8 +117,9 @@ case "$cmd" in
           fi
           ;;
         codex)
-          if install_codex_hooks; then
+          if install_codex_hooks && install_codex_surface; then
             echo "  ✓ Codex 共享 hook 脚本已就位: ~/.rig/hooks"
+            echo "  ✓ Codex skill 与 /rig:* command surface 已就位"
           else
             echo "⚠ Codex 全局机制未装全(见上 ↑)。项目骨架仍会铺,修好前置后重跑 rig init。" >&2
           fi
@@ -130,7 +135,7 @@ case "$cmd" in
     echo "  · 从 pom/package.json 推导回填 AGENTS.md 的项目地图(build/test/run)"
     echo "  · 写 scripts/verify-local.sh 的真实命令(compile→test→smoke)"
     echo "  · 完成后跑  rig doctor  自检"
-    echo; echo "提示:hook 变更需开新会话生效。"
+    echo; echo "提示:hook/command/skill 变更需开新会话生效；同一项目换 AI 工具时，请在那个工具里再跑一次 /rig:init。"
     ;;
   *) echo "未知命令: $cmd" >&2; echo >&2; usage >&2; exit 1 ;;
 esac

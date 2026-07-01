@@ -1,0 +1,4 @@
+interface:
+  display_name: "Rig"
+  short_description: "Initialize projects and run verification for shared AI coding workflows"
+  default_prompt: "Use rig to initialize this project, connect the current AI tool, and run verification."

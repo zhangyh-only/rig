@@ -92,6 +92,15 @@ after="$(jq '[.. | objects | .command? // empty] | length' "$home/.codex/hooks.j
 if [ "$before" = "$after" ] && jq -e '.hooks.UserPromptSubmit[0].hooks[0].command | contains("--codex")' "$home/.codex/hooks.json" >/dev/null 2>&1 && jq -e '.hooks.PostToolUse[0].hooks[0].command | contains("lint-changed.sh")' "$home/.codex/hooks.json" >/dev/null 2>&1; then
   ok "rig init --codex → registration idempotent"
 else no "rig init --codex registration 非幂等或命令缺失"; fi
+if [ -L "$home/.codex/skills/rig" ] && [ "$(readlink "$home/.codex/skills/rig")" = "$ROOT" ] && [ -L "$home/.agents/skills/rig" ] && [ "$(readlink "$home/.agents/skills/rig")" = "$ROOT" ]; then
+  ok "rig init --codex → Codex skill 目录已注册 rig"
+else no "rig init --codex 未注册 Codex skill 目录"; fi
+if [ -f "$home/.agents/plugins/rig/.codex-plugin/plugin.json" ] && [ -f "$home/.agents/plugins/rig/commands/init.md" ] && [ -f "$home/.agents/plugins/rig/commands/doctor.md" ] && [ -L "$home/.agents/plugins/rig/skills/rig" ]; then
+  ok "rig init --codex → Codex plugin command surface 已安装"
+else no "rig init --codex 未安装 Codex plugin command surface"; fi
+if jq -e '.plugins[] | select(.name=="rig" and .source.path=="./plugins/rig")' "$home/.agents/plugins/marketplace.json" >/dev/null 2>&1; then
+  ok "rig init --codex → marketplace 已登记 rig plugin"
+else no "rig init --codex 未登记 rig plugin marketplace"; fi
 bad_home="$tmp_root/bad-codex-home"
 bad_proj="$tmp_root/bad-codex-project"
 mkdir -p "$bad_home/.codex" "$bad_proj"
@@ -133,9 +142,12 @@ else no "bootstrap 未补齐共享 hook/Claude 入口（rc=${rc-} out=${boot_out
 if [ "$rc" -eq 0 ] && [ -L "$boot_home/.codex/hooks" ] && [ "$(readlink "$boot_home/.codex/hooks")" = "$boot_home/.rig/hooks" ] && jq empty "$boot_home/.codex/hooks.json" >/dev/null 2>&1; then
   ok "bootstrap → 自动补 Codex hooks.json 与入口"
 else no "bootstrap 未自动补 Codex（rc=${rc-} out=${boot_out-}）"; fi
-if printf '%s' "$boot_out" | grep -q 'Codex hook 注册已写入'; then
-  ok "bootstrap → 输出明确包含 Codex 接线结果"
-else no "bootstrap 输出没有 Codex 接线结果"; fi
+if [ "$rc" -eq 0 ] && [ -L "$boot_home/.codex/skills/rig" ] && [ -f "$boot_home/.agents/plugins/rig/commands/init.md" ]; then
+  ok "bootstrap → 自动补 Codex skill 与 /rig:* command surface"
+else no "bootstrap 未自动补 Codex skill/command surface（rc=${rc-} out=${boot_out-}）"; fi
+if printf '%s' "$boot_out" | grep -q 'Codex skill 已注册' && printf '%s' "$boot_out" | grep -q 'Codex /rig:init command surface'; then
+  ok "bootstrap → 输出明确包含 Codex skill/command 接线结果"
+else no "bootstrap 输出没有 Codex skill/command 接线结果"; fi
 
 echo
 echo "codex-hooks: $pass 过 / $fail 失败"

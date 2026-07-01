@@ -67,6 +67,23 @@ fi
 if [ -e "$HOME/.codex/hooks" ]; then
   [ -x "$HOME/.codex/hooks/inject-conventions.sh" ] && echo "  ✓ Codex hook 脚本入口可执行" || echo "  ⚠ Codex hook 脚本入口不可执行"
 fi
+if [ -d "$HOME/.codex" ] || [ -d "$HOME/.agents/plugins/rig" ]; then
+  if [ -L "$HOME/.codex/skills/rig" ] && [ -e "$HOME/.codex/skills/rig/SKILL.md" ]; then
+    echo "  ✓ Codex skill 已注册: ~/.codex/skills/rig"
+  else
+    echo "  ⚠ Codex skill 未注册到 ~/.codex/skills/rig"
+  fi
+  if [ -L "$HOME/.agents/skills/rig" ] && [ -e "$HOME/.agents/skills/rig/SKILL.md" ]; then
+    echo "  ✓ Codex agents skill 已注册: ~/.agents/skills/rig"
+  else
+    echo "  ⚠ Codex agents skill 未注册到 ~/.agents/skills/rig"
+  fi
+  if [ -f "$HOME/.agents/plugins/rig/.codex-plugin/plugin.json" ] && [ -f "$HOME/.agents/plugins/rig/commands/init.md" ] && [ -f "$HOME/.agents/plugins/rig/commands/doctor.md" ]; then
+    echo "  ✓ Codex /rig:* command surface 已安装"
+  else
+    echo "  ⚠ Codex /rig:* command surface 未安装"
+  fi
+fi
 
 echo "=== 5. 失败降级（缺前提时 hook 必须 exit 0 不阻断）==="
 if [ -x "$hooks/inject-conventions.sh" ]; then

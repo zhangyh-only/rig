@@ -1,0 +1,34 @@
+{
+  "name": "rig",
+  "version": "0.1.0",
+  "description": "Project onboarding and verification commands for the rig AI coding harness.",
+  "author": {
+    "name": "rig"
+  },
+  "homepage": "https://github.com/zhangyh-only/rig",
+  "repository": "https://github.com/zhangyh-only/rig",
+  "license": "MIT",
+  "keywords": [
+    "rig",
+    "coding",
+    "workflow",
+    "hooks",
+    "verification"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Rig",
+    "shortDescription": "Initialize projects and run verification for shared AI coding workflows",
+    "longDescription": "Rig connects Codex and Claude Code to a shared coding harness: global hooks, project conventions, verification scripts, and project-level /rig commands.",
+    "developerName": "rig",
+    "category": "Coding",
+    "capabilities": [
+      "Read",
+      "Write"
+    ],
+    "websiteURL": "https://github.com/zhangyh-only/rig",
+    "defaultPrompt": "Initialize this project with rig and run the project verification checks",
+    "brandColor": "#111111",
+    "screenshots": []
+  }
+}

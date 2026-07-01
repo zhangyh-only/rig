@@ -54,7 +54,7 @@
 | conflict-precedence-resolver | 多来源规范冲突裁决（项目>全局、canonical>派生、新>旧），归并遇矛盾不静默并列 | 归并时检测同主题矛盾 | author-with-user | 定优先级裁决表；冲突项标记让用户裁决，落 canonical 后派生物重生成 | false |
 | detect-source-registry-extensible `[ready]` | 既有规则"探测源"做成可追加数组而非硬编码列举 | 本文件类别 R 的 rule-sources 即此数组 | author-with-user | 新工具只追加一行；探测=遍历该数组 | true |
 | tool-adapter-registry `[ready]` | 工具适配表：每个已装工具如何消费 canonical | detect-env.sh 列 ~/.claude ~/.codex ~/.cursor + which copilot | author-with-user | 见类别 R 各 *-adapter 条目；引擎遍历已装工具逐个适配 | true |
-| installer-self-bootstrap-into-skills `[ready]` | rig skill 注册进工具 skills 目录(Claude=~/.claude/skills/rig)，AI 可发现可调用 | test -L ~/.claude/skills/rig（缺则 absent） | organize-existing | bootstrap 直接软链 ~/.claude/skills/rig 指向克隆目录(不走 cc-switch) | false |
+| installer-self-bootstrap-into-skills `[ready]` | rig skill 注册进工具 skills 目录(Claude=~/.claude/skills/rig；Codex=~/.codex/skills/rig 与 ~/.agents/skills/rig)，AI 可发现可调用 | test -L ~/.claude/skills/rig；检测到 Codex 时 test -L ~/.codex/skills/rig && test -L ~/.agents/skills/rig（缺则 absent） | organize-existing | bootstrap 直接软链各工具 skills/rig 指向克隆目录(不走 cc-switch)；Codex 由 scripts/install-codex-surface.sh 幂等处理 | false |
 | installer-golden-fixture-test `[declared]` | 安装器自身回归测试：golden 夹具跑全流程+两遍幂等断言 | skill 下有 test/fixtures + run-on-fixture.sh | template-copy | 对空项目/已有.cursorrules/已有AGENTS/多语言 monorepo 夹具断言终态且二次无 diff（注：运行时 hook 链路的确定性评分部分已由 repo 根 `eval-demo.sh` 覆盖；本项余下范围=安装器幂等夹具，仍 declared） | true |
 | backup-retention-and-restore `[ready]` | 带时间戳多层备份+restore；覆盖前 hash 比对 | 有 backups/<ts>/ + restore | template-copy | 写 ~/.claude/backups/<ts>/；覆盖前 hash 比对，有用户改动则提示 | true |
 
@@ -96,7 +96,8 @@
 |---|---|---|---|---|---|
 | global-hooks-installed `[ready]` | 八个全局机制脚本 + hook-emit 输出辅助脚本在中立共享源与 Claude 入口就位可执行（脚本存在 与 已注册 是两项独立 detect） | for h in inject-conventions inject-active-spec lint-changed guard guard-bash verify-on-stop session-start session-end hook-emit; do test -x ~/.rig/hooks/$h.sh && test -x ~/.claude/hooks/$h.sh; done | template-copy | 拷 assets/dotfiles-layer/hooks/*.sh → ~/.rig/hooks + chmod；同步到 ~/.claude/hooks 作为 Claude Code 入口 | true |
 | settings-hooks-registered `[ready]` | settings.json hooks 段已幂等注册全部机制命令 | jq 计数 .hooks 下命令 ≥4 且逐个命中 | merge | bash scripts/merge-settings.sh | true |
-| codex-hooks-json-registered `[ready]` | Codex 最小闭环 hook 注册（UserPromptSubmit 注入 + PostToolUse lint），独立于 config.toml | jq empty ~/.codex/hooks.json；命中 .codex/hooks/inject-conventions.sh --codex 与 lint-changed.sh --codex；~/.codex/hooks 入口可执行且优先关联 ~/.rig/hooks | merge | bootstrap.sh 与 rig init 默认 auto 检测 Codex 后调用 scripts/install-codex-hooks.sh，写/幂等合并 ~/.codex/hooks.json，~/.codex/hooks 软链到 ~/.rig/hooks（已有目录则拷脚本），提示 Codex CLI 用 /hooks trust、Desktop App 普通会话不支持该入口；--codex 仅作显式限定 | true |
+| codex-hooks-json-registered `[ready]` | Codex hook 注册（UserPromptSubmit 注入 + PostToolUse lint），独立于 config.toml | jq empty ~/.codex/hooks.json；命中 .codex/hooks/inject-conventions.sh --codex 与 lint-changed.sh --codex；~/.codex/hooks 入口可执行且优先关联 ~/.rig/hooks | merge | bootstrap.sh 与 rig init 默认 auto 检测 Codex 后调用 scripts/install-codex-hooks.sh，写/幂等合并 ~/.codex/hooks.json，~/.codex/hooks 软链到 ~/.rig/hooks（已有目录则拷脚本），提示 Codex CLI 用 /hooks trust、Desktop App 普通会话不支持该入口；--codex 仅作显式限定 | true |
+| codex-skill-and-command-surface `[ready]` | Codex 可发现 rig skill，并有本地 /rig:init / /rig:doctor command surface | test -L ~/.codex/skills/rig && test -L ~/.agents/skills/rig && test -f ~/.agents/plugins/rig/.codex-plugin/plugin.json && test -f ~/.agents/plugins/rig/commands/init.md && jq '.plugins[]? | select(.name=="rig")' ~/.agents/plugins/marketplace.json | merge | scripts/install-codex-surface.sh 注册 skill 软链、安装 ~/.agents/plugins/rig、登记 marketplace；开新 Codex 会话后加载。项目换 AI 工具时仍需在该工具中跑 /rig:init | true |
 | settings-json-valid-after-merge `[ready]` | 合并后仍合法 JSON 且未破坏 permissions/其它 hooks | jq empty；对比 .bak permissions 条目数未减 | merge | merge 后 jq empty 校验，失败从 .bak 回滚 | true |
 | hook-pretooluse-guard-protected-paths `[ready]` | PreToolUse(Edit\|Write\|MultiEdit) 红线拦截 | test -x guard.sh && jq PreToolUse 命中 | template-copy | 拷脚本+merge 注册 matcher | true |
 | hook-posttooluse-lint-changed `[ready]` | PostToolUse 改完即 lint 回灌当场修 | test -x lint-changed.sh && jq PostToolUse 命中 | template-copy | 拷脚本+merge 注册 | true |
@@ -144,6 +145,8 @@
 | slash-command-review `[ready]` | /rig:review 收尾触发 code-reviewer 子 agent 做遵守度/偏离度/完成度语义复核 | ls commands/rig/*.md grep -i review | template-copy | 新增 review.md 调用 code-reviewer 子 agent | true |
 | slash-command-rig-init `[ready]` | 全局 /rig:init —— 任意项目接入 rig 的入口(检测→装缺机制→铺骨架→交 AI 判断)；scope=global | test -f ~/.claude/commands/rig/init.md | template-copy | bootstrap 拷 assets/dotfiles-layer/commands/* → ~/.claude/commands/ | true |
 | slash-command-rig-doctor `[ready]` | 全局 /rig:doctor —— 自检(verify.sh) + 诊断 ✗ 根因并列修复动作(经确认后修)；scope=global | test -f ~/.claude/commands/rig/doctor.md | template-copy | 同上(bootstrap 装全局命令) | true |
+| codex-slash-command-rig-init `[ready]` | Codex 侧 /rig:init —— 在当前 Codex 工具会话里做项目级初始化 | test -f ~/.agents/plugins/rig/commands/init.md | template-copy | scripts/install-codex-surface.sh 安装本地 rig plugin commands；该命令内部跑 rig init --codex "$PWD" 并交 AI 做判断性工作 | true |
+| codex-slash-command-rig-doctor `[ready]` | Codex 侧 /rig:doctor —— 在当前 Codex 工具会话里跑项目自检 | test -f ~/.agents/plugins/rig/commands/doctor.md | template-copy | scripts/install-codex-surface.sh 安装本地 rig plugin commands；该命令内部跑 rig doctor "$PWD" 并诊断失败项 | true |
 
 ---
 
@@ -154,7 +157,7 @@
 | superpowers-installed | superpowers 在 skills 可用且 enabled（L2 brainstorm/write-plan/execute-plan 的执行体；**外部依赖、本安装器不随包交付**） | jq enabledPlugins superpowers；ls skills/superpowers；核对 brainstorm/writing-plans/executing-plans 技能文件可达 | install-command | 单独 marketplace install；装后自测三段技能可触发，否则只验目录会 present 误报 | true |
 | feature-spec-skill-installed | feature-spec skill 可用（L3 后向沉淀执行体；迁移易漏） | ls skills/feature-spec/SKILL.md \|\| ~/.cc-switch/skills/ | install-command | 拷/装 feature-spec skill 目录 | true |
 | skill-symlink-integrity `[ready]` | 工作流必需 skill 软链有效且目标存在（迁移/同步未完成时全悬空） | for l in ~/.claude/skills/*; do [ -L "$l" ] && [ ! -e "$l" ] && echo DANGLING; done | organize-existing | 重建软链指向目标(rig 克隆或同步源)；必需 skill 缺目标回退 template-copy 落实体 | false |
-| codex-skill-registration | Codex 在 config.toml 用 [[skills.config]] 显式注册必需 skill（不自动扫描） | grep -A2 '\[\[skills.config\]\]' ~/.codex/config.toml 对照必需 skill | merge | 为每个必需 skill 幂等追加 [[skills.config]] 块 | true |
+| codex-skill-registration `[ready]` | Codex 注册 rig skill（优先使用用户/agents skills 目录，不改 config.toml） | test -L ~/.codex/skills/rig && test -L ~/.agents/skills/rig | merge | scripts/install-codex-surface.sh 幂等软链 rig 克隆到两个 Codex 可发现 skills 目录；保留 config.toml 不动 | true |
 | skills-cursor-parity | Cursor 侧 skill 等价物或文档化缺位 | ls ~/.cursor/skills-cursor 对照必需能力清单 | author-with-user | 评估哪些需在 Cursor 落地，无法复用的引导重建或接受降级 | false |
 
 ---
