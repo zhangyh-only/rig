@@ -46,43 +46,117 @@ write_skill(){
 
 install_action_skills(){
   base="$1"
-  write_skill "$base/rig-init" "rig-init" "Initialize the current project with rig for Codex: run project-level checks, install support wiring, and finish onboarding. Use when the user asks for /rig:init, rig init, 初始化 rig, or to onboard the project for Codex." "# Rig Init
+  write_skill "$base/rig-init" "rig-init" "触发：用户要求 /rig:init、初始化、onboard 或接入当前项目；边界：这是当前项目+当前 AI 工具的接入，不是代码审查；动作：运行 rig init --codex 后 doctor。" "# Rig Init
 
-Run \`rig init --codex \"\$PWD\"\` when \`rig\` is on PATH. If not, run \`~/.codex/skills/rig/bin/rig init --codex \"\$PWD\"\` or \`~/.agents/skills/rig/bin/rig init --codex \"\$PWD\"\` after confirming the file exists.
+## 触发条件
+- 用户要求 \`/rig:init\`、\`rig init\`、初始化 rig、onboard 当前项目、把当前项目接入工作流。
+- 同一个仓库换到 Codex 使用时，即使 Claude Code 已经初始化过，也应触发一次。
 
-Then finish the judgment work from the main rig skill: collect existing rule files into \`docs/conventions/\`, derive build/test/run commands into \`AGENTS.md\`, replace placeholder \`scripts/verify-local.sh\` with real commands, ask before network installs, and run \`rig doctor \"\$PWD\"\`.
+## 边界
+- 这是当前项目 + 当前 AI 工具的初始化，不是当前 diff 的质量审查。
+- 不要凭模板伪造项目专属内容；项目地图、验证命令、规范条目必须来自代码或用户确认。
 
-This is tool-specific project initialization. If the same repository was initialized in Claude Code, still run this once in Codex."
-  write_skill "$base/rig-doctor" "rig-doctor" "Run rig health checks for the current project. Use when the user asks for /rig:doctor, rig doctor, or to diagnose rig installation." "# Rig Doctor
+## 执行动作
+1. 当 \`rig\` 在 PATH 中时，运行 \`rig init --codex \"\$PWD\"\`。否则先确认文件存在，再运行 \`~/.codex/skills/rig/bin/rig init --codex \"\$PWD\"\` 或 \`~/.agents/skills/rig/bin/rig init --codex \"\$PWD\"\`。
+2. 按主 \`rig\` skill 完成判断性工作：归并既有规则到 \`docs/conventions/\`，从项目文件推导 build/test/run 并补进 \`AGENTS.md\`，把占位的 \`scripts/verify-local.sh\` 替换成真实命令。
+3. 涉及联网安装或外部 plugin/skill 时先征求用户确认。
+4. 最后运行 \`rig doctor \"\$PWD\"\`，报告已改、待决和是否需要新会话。"
+  write_skill "$base/rig-doctor" "rig-doctor" "触发：用户要求 /rig:doctor、诊断 rig、排查 hook/skill/plugin/verify 接线；边界：先只读定位，不直接重装；动作：运行 rig doctor 并给根因。" "# Rig Doctor
 
-Run \`rig doctor \"\$PWD\"\`. If \`rig\` is not on PATH, use \`~/.codex/skills/rig/bin/rig doctor \"\$PWD\"\` or \`~/.agents/skills/rig/bin/rig doctor \"\$PWD\"\`.
+## 触发条件
+- 用户要求 \`/rig:doctor\`、\`rig doctor\`、诊断 rig 安装、排查 hook/skill/plugin/command surface/verify-local。
+- 用户反馈“装了但没生效”“命令找不到”“重复显示”“hook 没拦住”等机制健康问题。
 
-Report hook registration, Codex skill/action skill status, command surface status, and project verification results. Diagnose root cause before changing files."
-  write_skill "$base/rig-review" "rig-review" "Review the current change against rig conventions and verification expectations. Use when the user asks for /rig:review or rig review." "# Rig Review
+## 边界
+- 先诊断，不要一上来重跑 bootstrap、改配置或安装依赖。
+- 联网安装、破坏性修改、覆盖配置前必须确认。
 
-Review the current diff against \`AGENTS.md\`, \`docs/conventions/\`, active specs, and local verification requirements. Prioritize bugs, rule drift, missing tests, and honesty gaps. Run focused verification when safe."
-  write_skill "$base/rig-new-change" "rig-new-change" "Only start a new rig/openspec change. Do not use for broad status analysis; route analysis requests to rig-review or ordinary project analysis." "# Rig New Change
+## 执行动作
+1. 运行 \`rig doctor \"\$PWD\"\`。如果 \`rig\` 不在 PATH 中，使用 \`~/.codex/skills/rig/bin/rig doctor \"\$PWD\"\` 或 \`~/.agents/skills/rig/bin/rig doctor \"\$PWD\"\`。
+2. 报告 hook 注册、Codex skill/action skill 状态、command surface 状态和项目验证结果。
+3. 对失败项先定位根因，再提出最小修复动作。"
+  write_skill "$base/rig-review" "rig-review" "触发：审查当前 diff、执行情况、未完成事项或质量风险；边界：不新建 change、不归档；动作：对照 AGENTS/conventions/spec/验证要求复核。" "# Rig Review
 
-This skill is a short router for creating a new change. It must not do a long silent repository analysis.
+## 触发条件
+- 用户要求 \`/rig:review\`、\`rig review\`、审查当前变更、分析执行情况、检查未完成事项、复核质量风险。
+- 已经有 diff 或任务执行结果，需要判断是否符合 rig 规范和验收要求。
 
-Immediate routing:
-- If the user is not explicitly asking to create/start a change, respond immediately in Chinese: this request is not a \`rig-new-change\` task, and suggest \`rig-review\` or ordinary project analysis. Do not scan the repository first.
-- If the user asks to analyze current execution/status, route to \`rig-review\` or proceed as a normal analysis request after saying so.
-- If the user explicitly wants a new change, first say you will check whether openspec is enabled, then run only bounded checks: \`pwd\`, \`test -d openspec\`, \`test -f openspec/config.yaml\`, \`command -v openspec\`, and \`find openspec/changes -maxdepth 2 -type f\` when the directory exists.
+## 边界
+- 不创建新 openspec change；用户明确要新建需求/change 时才转 \`rig-new-change\`。
+- 不归档 change；用户明确要关闭/归档时才转 \`rig-archive-change\`。
 
-Create or prepare an openspec-style change only after confirming openspec is enabled for this project. If the CLI is missing, ask before installing \`@fission-ai/openspec\`. Do not run network installs without user confirmation."
-  write_skill "$base/rig-archive-change" "rig-archive-change" "Archive or close an active rig/openspec change. Use when the user asks for /rig:archive-change." "# Rig Archive Change
+## 执行动作
+1. 对照 \`AGENTS.md\`、\`docs/conventions/\`、活跃 spec/change、计划和本地验证要求复查。
+2. 优先报告 bug、规范漂移、范围偏离、缺失测试、完成度缺口和自报/实测不一致。
+3. 条件允许时运行聚焦验证；只读审查可直接做，写入修复需按用户意图确认。"
+  write_skill "$base/rig-new-change" "rig-new-change" "触发：用户明确要启动新需求/new change/spec；边界：不要用于分析当前状态或 review 当前 diff；动作：确认 openspec 后创建 proposal/tasks/spec-delta。" "# Rig New Change
 
-Validate the active change, confirm tasks are complete, run project verification, then archive according to the project's openspec workflow. Do not archive unfinished or unverified work."
-  write_skill "$base/rig-adr" "rig-adr" "Create or update an ADR for an architectural decision. Use when the user asks for /rig:adr." "# Rig ADR
+## 触发条件
+- 用户明确要求 \`/rig:new-change\`、创建/启动 change、为新需求起 spec、脚手架 openspec change。
+- 用户表达的是“接下来要做一个新需求/新变更”，而不是复盘已有执行情况。
 
-Draft an ADR in \`docs/adr/\` using the project template. Capture context, decision, consequences, alternatives, and verification links. Keep it grounded in actual code and user-confirmed decisions."
-  write_skill "$base/rig-feature-spec" "rig-feature-spec" "Create or update an as-built feature spec for a stable domain. Use when the user asks for /rig:feature-spec." "# Rig Feature Spec
+## 边界
+- 如果用户只是要求“分析当前状态/执行情况/没做完什么”，立即说明这不是 \`rig-new-change\`，改走 \`rig-review\` 或普通项目分析；不要先扫描仓库。
+- 不要在 openspec 未启用时擅自安装或创建骨架。
 
-Create or update a domain feature spec from current code, docs, tests, and user-confirmed behavior. Do not invent business rules; mark uncertain points as questions."
-  write_skill "$base/rig-learn" "rig-learn" "Capture a project lesson or recurring pitfall into rig conventions. Use when the user asks for /rig:learn." "# Rig Learn
+## 执行动作
+1. 先说明会检查 openspec 是否启用。
+2. 只运行有边界的检查：\`pwd\`、\`test -d openspec\`、\`test -f openspec/config.yaml\`、\`command -v openspec\`，以及目录存在时的 \`find openspec/changes -maxdepth 2 -type f\`。
+3. 确认 openspec 已启用后，再创建或准备 proposal/tasks/spec-delta。
+4. 如果 CLI 缺失，安装 \`@fission-ai/openspec\` 前必须询问用户。"
+  write_skill "$base/rig-archive-change" "rig-archive-change" "触发：用户明确要归档/关闭/完成某个 change；边界：未完成、未验证、change id 不明确时不归档；动作：validate+verify 后 archive。" "# Rig Archive Change
 
-Turn a confirmed pitfall into the right durable layer: lesson note, convention update, lint/guard rule, or ADR. Ask before promoting anything into hard rules."
+## 触发条件
+- 用户要求 \`/rig:archive-change\`、归档 change、关闭 change、完成 openspec change。
+
+## 边界
+- tasks 未完成、验证未通过、change id 不明确或有多个候选时不要归档。
+- 不要替用户把未勾选 task 直接改成完成。
+
+## 执行动作
+1. 定位 change，确认 id 和状态。
+2. 检查 tasks、运行 validate 和项目验证。
+3. 执行 archive。
+4. 归档后提醒是否需要 ADR 或 feature-spec 做长期沉淀。"
+  write_skill "$base/rig-adr" "rig-adr" "触发：用户要记录架构决策、技术选型、跨域边界或难回退取舍；边界：不是普通实现说明；动作：基于模板写 docs/adr 并更新索引。" "# Rig ADR
+
+## 触发条件
+- 用户要求 \`/rig:adr\`、记录架构决策、沉淀技术取舍、解释为什么这样设计。
+
+## 边界
+- 不用于普通实现说明或临时任务记录。
+- 不要替用户编造背景、理由或备选方案；不确定就标问题。
+
+## 执行动作
+1. 使用项目模板在 \`docs/adr/\` 中创建或更新 ADR。
+2. 记录 context、decision、consequences、alternatives 和验证链接。
+3. 更新 ADR 索引；其它文档只链接 ADR，不复制 why。"
+  write_skill "$base/rig-feature-spec" "rig-feature-spec" "触发：用户要反扫稳定业务域、沉淀现状设计或更新 as-built spec；边界：不规划新需求；动作：从代码/文档/测试写 feature spec。" "# Rig Feature Spec
+
+## 触发条件
+- 用户要求 \`/rig:feature-spec\`、反扫某个业务域、沉淀现状功能设计、刷新 as-built 文档。
+
+## 边界
+- 这是后向现状文档，不规划新需求，不替代 openspec。
+- 不编造业务规则；不确定点必须标成问题。
+
+## 执行动作
+1. 从当前代码、文档、测试和用户确认过的行为中提取事实。
+2. 创建或更新 \`docs/feature-specs/<domain>.md\`。
+3. 架构决策只链接 ADR，不复制 why。"
+  write_skill "$base/rig-learn" "rig-learn" "触发：用户要记录经验、踩坑、反复问题或固化规则；边界：不把一次性猜测直接升级硬规则；动作：lesson→pattern→确认后晋升。" "# Rig Learn
+
+## 触发条件
+- 用户要求 \`/rig:learn\`、记录经验、沉淀坑、固化规则、避免下次再犯。
+
+## 边界
+- 不把一次性猜测直接升级成 convention、lint 或 ADR。
+- 任何硬规则晋升前都要先给 diff/方案并等用户确认。
+
+## 执行动作
+1. 把确认过的坑写成 lesson。
+2. 同源多次出现时归纳成 pattern。
+3. 经用户确认后，晋升到 \`docs/conventions/\`、\`scripts/lint-one.sh\` 或 ADR。"
 }
 
 cleanup_legacy_action_skills(){

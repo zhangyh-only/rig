@@ -76,6 +76,7 @@ bash test/demo-run.sh     # 带旁白地演示整条链跑一遍
 
 - 设计与机制原理：[docs/DESIGN.md](docs/DESIGN.md)
 - 安装细节（AI 辅助 / 人工两条路径）：[docs/INSTALL.md](docs/INSTALL.md)
+- 命令语义与 AI 调用契约：[docs/COMMANDS.md](docs/COMMANDS.md)
 - 期望终态清单（安装器唯一数据源）：[reference/manifest.md](reference/manifest.md)
 
 ## 现状

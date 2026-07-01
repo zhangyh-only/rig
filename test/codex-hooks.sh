@@ -105,6 +105,13 @@ done
 if [ "$action_missing" -eq 0 ]; then
   ok "rig init --codex → Codex action skills 单路安装"
 else no "rig init --codex action skills 缺失或重复安装"; fi
+if grep -q '触发：' "$home/.codex/skills/rig-new-change/SKILL.md" \
+  && grep -q '边界' "$home/.codex/skills/rig-new-change/SKILL.md" \
+  && grep -q '执行动作' "$home/.codex/skills/rig-new-change/SKILL.md" \
+  && grep -q '触发：' "$home/.codex/skills/rig-review/SKILL.md" \
+  && grep -q '执行动作' "$home/.codex/skills/rig-review/SKILL.md"; then
+  ok "rig init --codex → Codex action skills 使用调用契约描述"
+else no "rig init --codex action skills 缺少触发/边界/动作契约"; fi
 if jq -e '.plugins[] | select(.name=="rig" and .source.path=="./plugins/rig" and .policy.authentication=="ON_USE")' "$home/.agents/plugins/marketplace.json" >/dev/null 2>&1; then
   ok "rig init --codex → marketplace 已登记 rig plugin"
 else no "rig init --codex 未以 ON_USE 登记 rig plugin marketplace"; fi

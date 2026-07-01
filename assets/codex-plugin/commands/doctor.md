@@ -1,15 +1,26 @@
 # /rig:doctor
 
-Run rig health checks for the current project and diagnose failures.
+检查当前项目的 rig 健康状态，并诊断失败原因。
 
-## Workflow
+## 触发条件
 
-1. Run `rig doctor "$PWD"`; if `rig` is not on `PATH`, locate the `rig` skill/package root and use its `bin/rig`.
-2. Report the verification sections exactly enough for the user to see which checks passed or failed.
-3. For failures, identify the likely root cause before proposing writes:
-   - missing global bootstrap or hook registration;
-   - missing `jq`;
-   - hook changes that require a new session;
-   - project not initialized with `/rig:init` for the current AI tool;
-   - placeholder or broken `scripts/lint-one.sh` / `scripts/verify-local.sh`.
-4. Ask before network installs or destructive changes. For local deterministic fixes, make the smallest safe change and rerun `rig doctor`.
+- 用户要求 `/rig:doctor`、`rig doctor`、检查 rig 健康状态、诊断 hook/skill/plugin/verify 接线。
+- 用户反馈“装了但没生效”“命令找不到”“hook 没触发”“重复显示”“项目初始化后仍异常”。
+
+## 边界
+
+- 先只读诊断，不要一上来重跑 bootstrap、改配置或安装依赖。
+- 联网安装、破坏性修改、覆盖配置前必须询问用户。
+- “需要新会话生效”这类用户动作，要明确说出来，不要假装修好了。
+
+## 必须动作
+
+1. 运行 `rig doctor "$PWD"`；如果 `rig` 不在 `PATH` 中，定位 `rig` skill/package 根目录并使用其中的 `bin/rig`。
+2. 报告验证分段，让用户能看清哪些检查通过、哪些失败。
+3. 对失败项，先判断可能根因，再提出写入修改：
+   - 缺少全局 bootstrap 或 hook 注册；
+   - 缺少 `jq`；
+   - hook 变更需要新会话才生效；
+   - 当前项目还没有在当前 AI 工具中执行 `/rig:init`；
+   - `scripts/lint-one.sh` / `scripts/verify-local.sh` 仍是占位或已损坏。
+4. 对本地确定性修复，做最小安全修改后重新运行 `rig doctor`。
