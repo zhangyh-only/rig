@@ -40,7 +40,7 @@ description: 安装、迁移或更新这套"AI coding 分层工作流"（本地 
 按各自 `remediation_type` 分发，代表性动作：
 - `template-copy`：拷 `assets/dotfiles-layer/hooks/*.sh` → `~/.rig/hooks/` 作为多工具共享源；同步到 `~/.claude/hooks/` 作为 Claude Code 入口；拷 `conventions.md`（已存在则展示差异问合并，不覆盖个人内容）。
 - `merge`：`bash scripts/merge-settings.sh ~/.claude/settings.json assets/dotfiles-layer/settings.json`（幂等去重、留 .bak、不丢既有 permissions）。
-- `codex merge`：若机器画像检测到 Codex，`bootstrap.sh` 与 `rig init` 都会自动调用 `scripts/install-codex-hooks.sh` 和 `scripts/install-codex-surface.sh`，确保 `~/.codex/hooks -> ~/.rig/hooks`、幂等合并 `~/.codex/hooks.json`、注册 `~/.codex/skills/rig` / `~/.agents/skills/rig`、安装 `~/.agents/plugins/rig` 本地 command surface；不改 `~/.codex/config.toml`。Codex CLI 的非 managed command hook 用 `/hooks` review/trust；Codex Desktop App 当前普通会话不支持 `/hooks`，不要提示用户把它当聊天消息发送。
+- `codex merge`：若机器画像检测到 Codex，`bootstrap.sh` 与 `rig init` 都会自动调用 `scripts/install-codex-hooks.sh` 和 `scripts/install-codex-surface.sh`，确保 `~/.codex/hooks -> ~/.rig/hooks`、幂等合并 `~/.codex/hooks.json`、注册 `~/.codex/skills/rig` / `~/.agents/skills/rig`、生成 `rig-*` 操作 skills、安装 `~/.agents/plugins/rig` 本地 surface；marketplace 使用 `authentication=ON_USE`，不要触发连接授权；不改 `~/.codex/config.toml`。Codex CLI 的非 managed command hook 用 `/hooks` review/trust；Codex Desktop App 当前普通会话不支持 `/hooks`，不要提示用户把它当聊天消息发送。
 - `install-command`：按机器画像选包管理器（**别假定 brew**）；装/补 skill 默认直接进工具自带 skills 目录(Claude=~/.claude/skills)；仅当该机用 cc-switch 等同步器才写同步源(detect-env 报告)。
 - 末尾固定提示：**hook 变更需开新会话生效**。
 

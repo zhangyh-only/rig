@@ -83,6 +83,16 @@ if [ -d "$HOME/.codex" ] || [ -d "$HOME/.agents/plugins/rig" ]; then
   else
     echo "  ⚠ Codex /rig:* command surface 未安装"
   fi
+  action_missing=0
+  for s in rig-init rig-doctor rig-review rig-new-change rig-archive-change rig-adr rig-feature-spec rig-learn; do
+    [ -f "$HOME/.codex/skills/$s/SKILL.md" ] && [ -f "$HOME/.agents/skills/$s/SKILL.md" ] || action_missing=1
+  done
+  [ "$action_missing" -eq 0 ] && echo "  ✓ Codex action skills 已安装" || echo "  ⚠ Codex action skills 未安装完整"
+  if [ -f "$HOME/.agents/plugins/marketplace.json" ] && jq -e '.plugins[]? | select(.name=="rig" and .policy.authentication=="ON_USE")' "$HOME/.agents/plugins/marketplace.json" >/dev/null 2>&1; then
+    echo "  ✓ Codex Rig plugin marketplace 使用 ON_USE（不会安装时触发连接）"
+  else
+    echo "  ⚠ Codex Rig plugin marketplace 不是 ON_USE，安装页可能尝试加载连接"
+  fi
 fi
 
 echo "=== 5. 失败降级（缺前提时 hook 必须 exit 0 不阻断）==="
