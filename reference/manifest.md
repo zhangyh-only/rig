@@ -168,6 +168,7 @@
 |---|---|---|---|---|---|
 | agents-md-canonical-exists `[ready]` | AGENTS.md 存在（L1 常驻上下文唯一来源） | test -f <proj>/AGENTS.md | template-copy | 拷 AGENTS.md 模板并提示填地图 | true |
 | agents-md-required-sections `[ready]` | AGENTS.md 五章节齐（项目地图/行为基线/规范遵守/变更与沉淀/本地自验证） | grep 五个结构锚点 | merge | 只补缺失章节，保留原有（尤其用户已填地图） | true |
+| agents-md-workflow-router-contract `[ready]` | AGENTS.md 含 Workflow Router 契约与多工具同步约束，说明 Query / Fast Path / OpenSpec Change / OpenSpec + Implementation Plan / ADR / Review 的触发、边界、动作，并要求 Claude Code、Codex 等已声明适配层同步更新，防止 AI 过度流程化、误建 change 或只改单一工具入口 | scripts/check-workflow-router.sh <proj> | merge | 补 `rig:workflow-router:start/end` 章节：小需求快路径、OpenSpec 与 implementation plan 分工、review 不创建 change、正反例；补多工具同步约束：Claude Code / Codex 必核对，未支持工具标“不适用 / 待补” | true |
 | agents-md-map-placeholders-filled | 项目地图占位符已填真实命令（占位=空地图） | grep -nE '<[^>]+>' 第1节；命令 dry-run | author-with-user | derive：从 package.json/pom/Makefile 推导 build/test/run 回填；定位句访谈确认 | false |
 | agents-md-over-100-lines-or-stale | AGENTS.md ≤100 行且不与 conventions 重复 | wc -l >100；diff 出大段重复 | organize-existing | 详细规范下沉 docs/conventions，AGENTS 只留指针压回 100 行 | false |
 | claude-md-imports-agents `[ready]` | CLAUDE.md 含 @AGENTS.md 单源引入 | grep -q '@AGENTS.md' CLAUDE.md | merge | 无→拷只含@AGENTS.md模板；缺行→补一行；已塞规范→建议并入 AGENTS | true |

@@ -1,9 +1,13 @@
 ---
-description: 一键脚手架一个 openspec change（proposal + tasks + spec-delta）
+description: 触发：新需求 / 行为契约变化 / 接口数据流程变化；边界：不用于 review、当前 diff 复核或执行情况分析；动作：确认 openspec 后创建 proposal/tasks/spec-delta。
 argument-hint: <变更简述，一句话说清要建什么>
 ---
 
 你要为本项目脚手架一个新的 openspec change。`$ARGUMENTS` 是用户给的变更简述。
+
+## 路由边界
+- 只在用户要启动新需求、行为契约变化、接口数据流程变化或验收标准变化时使用。
+- 如果用户要 review 当前实现偏离、分析执行情况、检查没做完什么，改走 `/rig:review`，不要创建 change。
 
 ## 前置检查
 1. 确认 `openspec/`（含 `openspec/changes/`、`openspec/specs/`）存在。**不存在就停下**，提示：

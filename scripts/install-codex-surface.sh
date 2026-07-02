@@ -75,28 +75,29 @@ install_action_skills(){
 1. 运行 \`rig doctor \"\$PWD\"\`。如果 \`rig\` 不在 PATH 中，使用 \`~/.codex/skills/rig/bin/rig doctor \"\$PWD\"\` 或 \`~/.agents/skills/rig/bin/rig doctor \"\$PWD\"\`。
 2. 报告 hook 注册、Codex skill/action skill 状态、command surface 状态和项目验证结果。
 3. 对失败项先定位根因，再提出最小修复动作。"
-  write_skill "$base/rig-review" "rig-review" "触发：审查当前 diff、执行情况、未完成事项或质量风险；边界：不新建 change、不归档；动作：对照 AGENTS/conventions/spec/验证要求复核。" "# Rig Review
+  write_skill "$base/rig-review" "rig-review" "触发：复核当前实现 / 完成度 / 偏离度 / 当前 diff；边界：不创建 change、不归档、不规划新需求；动作：对照 AGENTS/conventions/OpenSpec/plan/验证要求审查。" "# Rig Review
 
 ## 触发条件
 - 用户要求 \`/rig:review\`、\`rig review\`、审查当前变更、分析执行情况、检查未完成事项、复核质量风险。
-- 已经有 diff 或任务执行结果，需要判断是否符合 rig 规范和验收要求。
+- 已经有当前实现、当前 diff 或任务执行结果，需要判断完成度、偏离度、缺测和是否符合 rig 规范。
 
 ## 边界
-- 不创建新 openspec change；用户明确要新建需求/change 时才转 \`rig-new-change\`。
+- 不创建 change；用户明确要新建需求、行为契约变化或接口数据流程变化时才转 \`rig-new-change\`。
 - 不归档 change；用户明确要关闭/归档时才转 \`rig-archive-change\`。
+- 不规划新需求；review 只复核当前状态。
 
 ## 执行动作
-1. 对照 \`AGENTS.md\`、\`docs/conventions/\`、活跃 spec/change、计划和本地验证要求复查。
+1. 对照 \`AGENTS.md\`、\`docs/conventions/\`、OpenSpec/change、implementation plan 和本地验证要求复查。
 2. 优先报告 bug、规范漂移、范围偏离、缺失测试、完成度缺口和自报/实测不一致。
 3. 条件允许时运行聚焦验证；只读审查可直接做，写入修复需按用户意图确认。"
-  write_skill "$base/rig-new-change" "rig-new-change" "触发：用户明确要启动新需求/new change/spec；边界：不要用于分析当前状态或 review 当前 diff；动作：确认 openspec 后创建 proposal/tasks/spec-delta。" "# Rig New Change
+  write_skill "$base/rig-new-change" "rig-new-change" "触发：新需求 / 行为契约变化 / 接口数据流程变化；边界：不用于 review、当前 diff 复核或执行情况分析；动作：确认 openspec 后创建 proposal/tasks/spec-delta。" "# Rig New Change
 
 ## 触发条件
 - 用户明确要求 \`/rig:new-change\`、创建/启动 change、为新需求起 spec、脚手架 openspec change。
-- 用户表达的是“接下来要做一个新需求/新变更”，而不是复盘已有执行情况。
+- 用户表达的是新需求、行为契约变化、接口数据流程变化或验收标准变化。
 
 ## 边界
-- 如果用户只是要求“分析当前状态/执行情况/没做完什么”，立即说明这不是 \`rig-new-change\`，改走 \`rig-review\` 或普通项目分析；不要先扫描仓库。
+- 如果用户只是要求“分析当前状态/执行情况/没做完什么/review 当前 diff”，立即说明这不是 \`rig-new-change\`，改走 \`rig-review\` 或普通项目分析；不要先扫描仓库。
 - 不要在 openspec 未启用时擅自安装或创建骨架。
 
 ## 执行动作
@@ -118,10 +119,11 @@ install_action_skills(){
 2. 检查 tasks、运行 validate 和项目验证。
 3. 执行 archive。
 4. 归档后提醒是否需要 ADR 或 feature-spec 做长期沉淀。"
-  write_skill "$base/rig-adr" "rig-adr" "触发：用户要记录架构决策、技术选型、跨域边界或难回退取舍；边界：不是普通实现说明；动作：基于模板写 docs/adr 并更新索引。" "# Rig ADR
+  write_skill "$base/rig-adr" "rig-adr" "触发：Graph 编排边界、跨域技术选型或难回退取舍，需要记录长期架构决策原因；边界：不是普通实现说明；动作：基于模板写 docs/adr 并更新索引。" "# Rig ADR
 
 ## 触发条件
 - 用户要求 \`/rig:adr\`、记录架构决策、沉淀技术取舍、解释为什么这样设计。
+- 任务涉及 Graph 编排边界、跨域技术选型、难回退架构选择，需要沉淀长期架构决策原因。
 
 ## 边界
 - 不用于普通实现说明或临时任务记录。
@@ -131,10 +133,11 @@ install_action_skills(){
 1. 使用项目模板在 \`docs/adr/\` 中创建或更新 ADR。
 2. 记录 context、decision、consequences、alternatives 和验证链接。
 3. 更新 ADR 索引；其它文档只链接 ADR，不复制 why。"
-  write_skill "$base/rig-feature-spec" "rig-feature-spec" "触发：用户要反扫稳定业务域、沉淀现状设计或更新 as-built spec；边界：不规划新需求；动作：从代码/文档/测试写 feature spec。" "# Rig Feature Spec
+  write_skill "$base/rig-feature-spec" "rig-feature-spec" "触发：稳定业务域需要代码现状反扫、沉淀现状设计或更新 as-built spec；边界：不规划新需求、不替代 OpenSpec；动作：从代码/文档/测试写 feature spec。" "# Rig Feature Spec
 
 ## 触发条件
 - 用户要求 \`/rig:feature-spec\`、反扫某个业务域、沉淀现状功能设计、刷新 as-built 文档。
+- 代码已稳定，需要代码现状反扫，把当前实现沉淀成长期 as-built 文档。
 
 ## 边界
 - 这是后向现状文档，不规划新需求，不替代 openspec。

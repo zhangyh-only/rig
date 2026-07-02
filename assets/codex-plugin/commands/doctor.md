@@ -23,4 +23,5 @@
    - hook 变更需要新会话才生效；
    - 当前项目还没有在当前 AI 工具中执行 `/rig:init`；
    - `scripts/lint-one.sh` / `scripts/verify-local.sh` 仍是占位或已损坏。
+   - `AGENTS.md` 缺少 Workflow Router、小需求快路径、OpenSpec 与 implementation plan 分工，或缺少 review 不创建 change 的边界。
 4. 对本地确定性修复，做最小安全修改后重新运行 `rig doctor`。

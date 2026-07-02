@@ -128,5 +128,16 @@ for h in session-start session-end inject-active-spec; do
   [ -x "$hooks/$h.sh" ] && echo "  ✓ $h.sh 已装" || echo "  ⚠ 未装 $h.sh"
 done
 
+echo "=== 7. Workflow Router 契约（项目 AGENTS.md）==="
+if [ -x "$(dirname "$0")/check-workflow-router.sh" ]; then
+  if "$(dirname "$0")/check-workflow-router.sh" "$proj"; then
+    :
+  else
+    fail=1
+  fi
+else
+  echo "  ✗ 未找到 Workflow Router 检查脚本"; fail=1
+fi
+
 echo
 [ "$fail" -eq 0 ] && echo "=== 关键项全部通过 ===" || { echo "=== 有失败项，请检查上面 ✗ ==="; exit 1; }

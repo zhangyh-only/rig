@@ -18,6 +18,7 @@ description: 对当前项目跑 rig 自检(注入/红线/闸/降级);有 ✗ 则
 | 装了却"没反应" | hook 改了没开新会话 | 提醒我**开新会话**（这条你改不了，只能我来） |
 | 注入"无输出" / 提示无 lint-one | 本项目还没接入 | 跑 `/rig:init` 接入当前项目 |
 | 失败降级 ✗（该放行却 exit 2 拦） | 项目 `scripts/lint-one.sh` 占位 / 检查器没配却硬跑 | 把对应语言分支改成未配时 `exit 0`（或填真实命令） |
+| Workflow Router 契约 ✗ | 项目 `AGENTS.md` 还缺路由规则，AI 容易把小改过度流程化或把 review 误路由到 new-change | 补 `Workflow Router` 章节：小需求快路径、OpenSpec 与 implementation plan 分工、review 不创建 change、正反例 |
 
 ## 铁律
 - **先问后改**：任何写操作（重跑 bootstrap、装 jq、改 lint-one、跑 `/rig:init`）都先把动作讲清、等我确认；能只读诊断的绝不擅自改。

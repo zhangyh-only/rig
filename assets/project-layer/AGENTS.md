@@ -24,25 +24,45 @@
 - 本项目的编码/结构/命名等**完整规范在 `docs/conventions/`**，会在你开始编码时被注入上下文，**必须遵守**。
 - 优先级：**本项目规范 > 全局个人偏好**，冲突以本项目为准。
 - 机器可判定的规则由检查器在你改完文件后自动校验（不通过会被拦回），并在 CI 必过；机器判不了的语义规则在收尾 review 兜底。
+- **多工具同步约束**：凡调整工作流入口、命令描述、hook、doctor、manifest、项目模板或安装文档，必须同步覆盖已声明支持的 AI 工具层；至少核对 Claude Code（`.claude/commands`、`~/.claude` hooks/settings/agents/skills）和 Codex（action skills、plugin command surface、hooks.json）。暂不支持的工具必须标明“不适用 / 待补”，不要只改单一工具入口。
 
 ## 4. 本地自验证（L0 Harness）
 - 验证命令：`bash scripts/verify-local.sh`（编译 → 单测 → 本地启动 → 冒烟）。**此脚本按项目填写**（重云端依赖项目尤其需要：DIP + Profile 隔离让本地能跑）。
 - 改完代码自行跑一次验证，不要只说"已完成"。
 - 注意：若本项目尚无 `scripts/verify-local.sh`，收工时的"完成度"硬闸（Stop hook）会空转（静默放行）——SessionStart 会在会话开场响亮提醒补这个洞，请尽早补上。
 
-## 5. 变更流程：先判 意图×风险，再走对应路径
-先给任务分类——**意图**（纯查询 / 修 bug / 加特性）×**风险**（可逆性、影响面、是否碰线上）——决定走多重的流程。别一刀切，也别小题大做：
+## 5. 变更流程：Workflow Router（先判任务，再选工作流）
+<!-- rig:workflow-router:start -->
+先按任务复杂度和产物选择入口，别把小改过度流程化，也别把契约变化直接写代码。
 
-| 意图 × 风险 | 走的路径（节点集） |
-|---|---|
-| **QUERY**（纯查询 / 排查，不改业务代码） | **0 流程**——直接查、答；识别对了就不要启动变更流程。排查中若确认是真 bug，再转入下面对应行。 |
-| **BUG · 低**（局部修复、可逆、不碰线上契约） | 快路径：注入规范 → 编码 → lint → `verify-local`。照常 git，不强制设计前段。 |
-| **特性 · 中**（跨文件特性、改接口/数据但影响可控） | 快路径 **＋ 设计前段**：`superpowers` brainstorm（澄清边界、不擅自假设）→ write-plan（验收写成可执行，套 `docs/plans/_template.md`）→ **你审批** → execute-plan（TDD）。需求驱动则 `/rig:new-change` 起 openspec change（intent + spec-delta + tasks），进行中的 change 会被 hook 自动注入。 |
-| **特性 · 高**（框架升级、跨模块、难回退、碰线上） | 中档全部 **＋ `/rig:adr` 记跨域决策 ＋ 收尾必跑 `code-reviewer` 偏离度复核**。越界代价高，动手前先把边界 / 回滚方案 / 失败模式想清楚（高风险才值这个前置成本）。 |
+| 路由 | 触发条件 | 边界 | 动作 |
+|---|---|---|---|
+| **Query** | 纯查询、解释、排查，不改代码。 | 排查确认是真 bug 后，再转 Fast Path 或 OpenSpec。 | 直接查证并回答；必要时给证据路径。 |
+| **Fast Path（小需求快路径）** | 小 bug、小样式、小文案、小字段，影响局部且不改变行为契约。 | 不强制 OpenSpec / superpowers；如果碰接口、数据流或验收口径，升级。 | 直接最小修改 → 聚焦测试 / lint → `verify-local`（能跑则跑）。 |
+| **OpenSpec Change** | 新需求、行为契约变化、接口/数据流程变化、验收标准变化。 | 不用于 review 当前实现；不用于只问“做完了吗/偏了吗”。 | 用 `/rig:new-change` 建 proposal / spec-delta / `openspec/tasks.md`。 |
+| **OpenSpec + Implementation Plan** | 前后端联动、数据结构变化、多模块协作、步骤多且需要施工顺序。 | OpenSpec 只管“做什么/验收什么”，不替代施工计划。 | 先 OpenSpec，再写 superpowers plan / implementation plan，按计划 TDD 执行。 |
+| **ADR** | Graph 编排边界、跨域技术选型、难回退架构选择。 | 不记录普通实现说明；不要把一次性代码细节写成 ADR。 | 用 `/rig:adr` 记录长期架构决策原因，并让其它文档只链接它。 |
+| **Review** | 复核当前实现、当前 diff、完成度、偏离度、缺测或执行结果。 | review 不创建 change，不归档 change。 | 用 `/rig:review` 对照 AGENTS / conventions / OpenSpec / plan / 验证结果审查。 |
 
-**硬规则「改完必验证」**：凡动了真实业务代码，`verify-local`（完成度硬闸）必过才算收工；纯 QUERY 除外。
+职责固定口径：
+- OpenSpec：需求合同、行为契约、验收清单。
+- `openspec/tasks.md`：交付/验收视角任务。
+- superpowers plan / implementation plan：复杂需求的施工图。
+- ADR：长期架构决策原因。
+- feature-spec：代码现状反扫。
 
-**可用命令（入口）**：`/rig:new-change` 起变更 · `/rig:archive-change` 归档（合并 spec-delta 进 `openspec/specs/`）· `/rig:adr` 记跨域决策 · `/rig:feature-spec` 后向沉淀域设计 · `/rig:learn` 沉淀踩坑、晋升规则。
+正反例：
+- 改按钮文案：Fast Path，不起 OpenSpec。
+- 修局部 bug：Fast Path；若发现会改接口契约，再升级 OpenSpec。
+- review 当前实现偏离：`/rig:review`，不要 `/rig:new-change`。
+- 新增场景配置工作台：OpenSpec。
+- 前后端联动 + 数据结构 + 多模块：OpenSpec + implementation plan。
+- Graph 编排边界 / 难回退架构选择：ADR。
+<!-- rig:workflow-router:end -->
+
+**硬规则「改完必验证」**：凡动了真实业务代码，`verify-local`（完成度硬闸）必过才算收工；纯 Query 除外。
+
+**可用命令（入口）**：`/rig:new-change` 起变更 · `/rig:archive-change` 归档（合并 spec-delta 进 `openspec/specs/`）· `/rig:adr` 记跨域决策 · `/rig:feature-spec` 后向沉淀域设计 · `/rig:review` 复核当前实现 · `/rig:learn` 沉淀踩坑、晋升规则。
 
 ## 6. 收尾与沉淀
 - **收尾评估**：改动完成、lint/CI 都过后，调 **`code-reviewer`** 子 agent 做一次 fresh-context 对抗式语义审查，输出 **遵守度 / 偏离度 / 完成度** 三维清单（只报不改）。机器判得了的已被 lint/verify 拦，这一步专兜机器判不了的语义。
