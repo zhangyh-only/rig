@@ -23,6 +23,16 @@
 
 这条是项目规范约束：不能只改 Codex 候选描述，也不能只改 Claude Code slash command。若某次变更只影响单一工具，必须说明为什么其它工具不受影响。
 
+## 交付说明约束
+
+凡完成有一定规模的 rig 调整，收尾回复必须说明这次改动如何落地：
+
+- 新项目怎么用：说明新 clone / 新接入项目需要跑什么，例如 `bootstrap.sh`、`/rig:init`、`rig doctor`，以及是否要开新 AI 工具会话。
+- 已接入 rig 的项目怎么更新：说明是否需要重新运行 `/rig:init`、手动合并 `AGENTS.md` / `.claude/commands` / `docs/conventions`、重跑 `rig doctor`，以及哪些内容不会自动覆盖。
+- 多工具影响：说明 Claude Code、Codex、其它已声明适配工具分别是否受影响；不受影响或暂未支持的，标注“不适用 / 待补”。
+
+这条用于避免“代码改完了，但使用路径没交代”。尤其是模板、manifest、doctor、hook、command surface 类调整，必须讲清楚新项目和已接入 rig 的项目各自怎么获得这次能力。
+
 ## Workflow Router
 
 先判断用户要的是“问清楚/查现状/小改/新契约/复杂施工/架构决策/复核当前实现”中的哪一种，再选入口。核心目标是两件事：小事别过度流程化，契约变化别绕过 OpenSpec。
