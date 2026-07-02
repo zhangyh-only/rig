@@ -25,7 +25,7 @@
 - 优先级：**本项目规范 > 全局个人偏好**，冲突以本项目为准。
 - 机器可判定的规则由检查器在你改完文件后自动校验（不通过会被拦回），并在 CI 必过；机器判不了的语义规则在收尾 review 兜底。
 - **多工具同步约束**：凡调整工作流入口、命令描述、hook、doctor、manifest、项目模板或安装文档，必须同步覆盖已声明支持的 AI 工具层；至少核对 Claude Code（`.claude/commands`、`~/.claude` hooks/settings/agents/skills）和 Codex（action skills、plugin command surface、hooks.json）。暂不支持的工具必须标明“不适用 / 待补”，不要只改单一工具入口。
-- **交付说明约束**：凡完成有一定规模的 rig 调整，最终回复必须说明这次改动在**新项目**中怎么使用、在**已接入 rig** 的项目中怎么更新/检查；若需要重新运行 `/rig:init`、`rig doctor`、重启 AI 会话或手动合并 `AGENTS.md`，要明确写出来。
+- **交付说明约束**：凡完成有一定规模的 rig 调整，最终回复必须说明这次改动在**新项目**中怎么使用、在**已接入 rig** 的项目中怎么更新/检查；若需要重新运行 `/rig:init`、`rig doctor`、重启 AI 会话或由 rig 自动补齐 `AGENTS.md` / `.claude/commands`，要明确写出来。不要要求用户复制模板文件或手工拼接项目规范。
 
 ## 4. 本地自验证（L0 Harness）
 - 验证命令：`bash scripts/verify-local.sh`（编译 → 单测 → 本地启动 → 冒烟）。**此脚本按项目填写**（重云端依赖项目尤其需要：DIP + Profile 隔离让本地能跑）。

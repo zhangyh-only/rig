@@ -28,7 +28,7 @@
 凡完成有一定规模的 rig 调整，收尾回复必须说明这次改动如何落地：
 
 - 新项目怎么用：说明新 clone / 新接入项目需要跑什么，例如 `bootstrap.sh`、`/rig:init`、`rig doctor`，以及是否要开新 AI 工具会话。
-- 已接入 rig 的项目怎么更新：说明是否需要重新运行 `/rig:init`、手动合并 `AGENTS.md` / `.claude/commands` / `docs/conventions`、重跑 `rig doctor`，以及哪些内容不会自动覆盖。
+- 已接入 rig 的项目怎么更新：说明是否需要重新运行 `/rig:init` 或 `rig init <项目路径>` 自动补齐、重跑 `rig doctor`，以及哪些内容不会自动覆盖；不要要求用户复制模板文件或自行拼接规范。
 - 多工具影响：说明 Claude Code、Codex、其它已声明适配工具分别是否受影响；不受影响或暂未支持的，标注“不适用 / 待补”。
 
 这条用于避免“代码改完了，但使用路径没交代”。尤其是模板、manifest、doctor、hook、command surface 类调整，必须讲清楚新项目和已接入 rig 的项目各自怎么获得这次能力。

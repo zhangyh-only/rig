@@ -5,7 +5,7 @@ set -u
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 pass=0
 fail=0
-tmp_root=""
+tmp_root="$(mktemp -d)"
 
 ok(){ printf '  \033[32m✓\033[0m %s\n' "$1"; pass=$((pass+1)); }
 no(){ printf '  \033[31m✗\033[0m %s\n' "$1"; fail=$((fail+1)); }
@@ -61,6 +61,44 @@ assert_grep 'Workflow Router 如何落地到项目' "$readme" "README 说明 Wor
 assert_grep '新项目' "$readme" "README 说明新项目使用方式"
 assert_grep '已接入 rig 的项目' "$readme" "README 说明已接入项目使用方式"
 assert_grep 'rig doctor' "$readme" "README 说明用 doctor 检查"
+assert_grep '自动补齐' "$readme" "README 说明已接入项目自动补齐"
+forbidden_router_docs="$tmp_root/forbidden-router-docs.txt"
+if rg -n '手动合并|如需合并请手动|手工拼模板' "$readme" "$commands" "$ROOT/assets/project-layer/AGENTS.md" "$ROOT/docs/INSTALL.md" "$ROOT/scripts/bootstrap.sh" > "$forbidden_router_docs"; then
+  no "Workflow Router 文档/脚本不应要求用户手动合并模板"
+  sed 's/^/    /' "$forbidden_router_docs"
+else
+  ok "Workflow Router 文档/脚本不要求用户手动合并模板"
+fi
+
+echo
+echo "== rig init upgrades already-onboarded project =="
+upgraded_project="$tmp_root/upgraded-project"
+mkdir -p "$upgraded_project/.claude/commands/rig"
+cat > "$upgraded_project/AGENTS.md" <<'MD'
+# Existing Project
+
+## 1. 项目地图
+- 保留我已有的项目说明。
+
+## 5. 旧变更流程
+- 这里是旧项目已有内容。
+MD
+cat > "$upgraded_project/.claude/commands/rig/new-change.md" <<'MD'
+---
+description: 旧版 new-change 描述
+argument-hint: <变更简述>
+---
+
+旧项目里已有的命令正文。
+MD
+HOME="$tmp_root/upgrade-home" "$ROOT/bin/rig" init --cursor "$upgraded_project" >/dev/null
+assert_grep '保留我已有的项目说明' "$upgraded_project/AGENTS.md" "rig init 保留既有 AGENTS 内容"
+assert_grep 'Workflow Router' "$upgraded_project/AGENTS.md" "rig init 自动补齐 Workflow Router"
+assert_grep '多工具同步约束' "$upgraded_project/AGENTS.md" "rig init 自动补齐多工具同步约束"
+assert_grep '交付说明约束' "$upgraded_project/AGENTS.md" "rig init 自动补齐交付说明约束"
+assert_grep '新需求 / 行为契约变化 / 接口数据流程变化' "$upgraded_project/.claude/commands/rig/new-change.md" "rig init 自动更新 Claude command description"
+assert_grep '## 路由边界' "$upgraded_project/.claude/commands/rig/new-change.md" "rig init 自动补齐 Claude command 路由边界"
+assert_grep '旧项目里已有的命令正文' "$upgraded_project/.claude/commands/rig/new-change.md" "rig init 保留既有 Claude command 正文"
 
 echo
 echo "== doctor Workflow Router checker =="
@@ -70,7 +108,6 @@ else
   no "check-workflow-router 接受项目模板"
 fi
 
-tmp_root="$(mktemp -d)"
 bad_project="$tmp_root/bad-project"
 mkdir -p "$bad_project"
 cat > "$bad_project/AGENTS.md" <<'MD'

@@ -72,7 +72,7 @@ chmod +x ~/.claude/hooks/*.sh
 # 子 agent（code-reviewer / spec-author）→ ~/.claude/agents（/review 依赖它，勿漏）
 mkdir -p ~/.claude/agents
 cp assets/dotfiles-layer/agents/*.md ~/.claude/agents/
-# 全局个人偏好：不存在才拷，已有则手动合并（勿覆盖）
+# 全局个人偏好：不存在才拷，已有则保留原文件并提示差异；由 rig/AI 做保留式补齐，勿让用户复制模板
 [ -f ~/.claude/conventions.md ] || cp assets/dotfiles-layer/conventions.md ~/.claude/conventions.md
 # 合并 hooks 进 ~/.claude/settings.json（幂等、不覆盖既有 permissions/其它 hooks，自动备份 .bak）
 bash scripts/merge-settings.sh ~/.claude/settings.json assets/dotfiles-layer/settings.json

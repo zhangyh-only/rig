@@ -64,7 +64,7 @@ else
   echo "  已注册 ~/.claude/skills/rig -> $here"
 fi
 echo "== 3. 全局个人偏好（不覆盖既有）=="
-if [ -f "$HOME/.claude/conventions.md" ]; then echo "  已存在，跳过（如需合并请手动）"; else cp "$here"/assets/dotfiles-layer/conventions.md "$HOME/.claude/conventions.md"; echo "  已拷 conventions.md"; fi
+if [ -f "$HOME/.claude/conventions.md" ]; then echo "  已存在，已保留；如需补齐请运行 rig init/doctor 让 rig 做保留式更新"; else cp "$here"/assets/dotfiles-layer/conventions.md "$HOME/.claude/conventions.md"; echo "  已拷 conventions.md"; fi
 if [ -f "$HOME/.claude/conventions-always.md" ]; then echo "  conventions-always.md 已存在，跳过（你的个人文件）"; else cp "$here"/assets/dotfiles-layer/conventions-always.md "$HOME/.claude/conventions-always.md"; echo "  已拷 conventions-always.md —— 每轮注入层，请填你的语言/语气指令"; fi
 echo "== 4. 合并 hooks 进 settings.json（幂等不覆盖）=="
 ok4=0
