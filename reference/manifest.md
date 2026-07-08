@@ -127,6 +127,7 @@
 
 | id | what | detect | remediation_type | remediation | templatable |
 |---|---|---|---|---|---|
+| review-contract-canonical `[ready]` | code-reviewer / rig-review 共享审查合同，固定只报不改、遵守度/偏离度/完成度和 honesty gap，防止 Claude/Codex review 语义漂移 | test -f assets/shared/review-contract.md && grep -q 'honesty gap' assets/shared/review-contract.md | template-copy | 新增 assets/shared/review-contract.md；Claude 子 agent 与 Codex rig-review action skill 都以此合同对齐核心审查语义 | true |
 | subagent-code-reviewer `[ready]` | code-review 子 agent 收尾对 diff 做语义规则兜底（L4 遵守度/偏离度） | ls ~/.claude/agents/*.md \| grep -i review | template-copy | 新增 code-reviewer.md（注入 B 桶语义规则，输出偏离清单） | true |
 | subagent-spec-author `[ready]` | feature-spec/openspec 起草子 agent，隔离长扫描不污染主线 | ls agents/*.md grep -Ei 'spec\|design' | template-copy | 提供 spec-author.md 包裹 feature-spec skill | true |
 | subagent-verify-runner | L0 验证执行子 agent，构建日志不吃主上下文（项目专属命令） | ls 项目 agents/*.md grep -Ei 'verify\|test\|build' | author-with-user | 脚手架模板+访谈填本项目 build/test/run | false |

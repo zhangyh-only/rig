@@ -21,7 +21,7 @@ bash rig/install.sh                  # 可选：把 rig 加进 PATH（模型 B �
 ### B · 接入一个项目（每个项目一次，在 AI 里）
 1. 进项目目录、在**要使用的 AI 工具里**开新会话；建议先 `git switch -c harness-onboard` 把在飞的改动隔开。
 2. 敲 **`/rig:init`**（或终端跑 `rig init --codex|--claude <项目路径>`）—— 这是“当前项目 + 当前 AI 工具”的初始化入口。同一个项目从 Claude 换到 Codex，也要在 Codex 里再跑一次 `/rig:init`，因为工具侧 hook/skill/command 信任和项目骨架检查都要以该工具会话为准。
-3. `/rig:init` 会自动检测缺啥补啥：本机检测已装 Claude/Codex/Cursor 并补对应工具接线；项目里铺骨架、把既有规范（`.cursorrules`/copilot-instructions…）归并进 `docs/conventions/` 三桶、从 `pom`/`package.json` 推导 `AGENTS.md` 地图、起草 `scripts/verify-local.sh`。
+3. `/rig:init` 会自动检测缺啥补啥：本机检测已装 Claude/Codex/Cursor 并补对应工具接线；项目里铺骨架、把既有规范（`.cursorrules`/copilot-instructions…）归并进 `docs/conventions/` 三桶、从 `pom`/`package.json` 推导 `AGENTS.md` 地图、起草 `scripts/verify-local.sh`，并提供按项目类型、语言/资料类型整理的规范模板库。
 4. 审 diff，确认后 commit。
 5. 把 `scripts/verify-local.sh` 填成项目真实命令（compile→test→smoke）。
 6. 敲 **`/rig:doctor`** 自检，绿了就接入完成。
@@ -52,6 +52,7 @@ bash rig/install.sh                  # 可选：把 rig 加进 PATH（模型 B �
 
 **项目内容**（`/rig:init` 时落地，每个项目一份）
 - `AGENTS.md`（地图 + 基线 + 指针）· `docs/conventions/`（规范三桶 A/B/C）· `scripts/lint-one.sh`（语言适配器）· `scripts/verify-local.sh`（L0 自验证）· `/rig:*` 工作流命令 · openspec / ADR 模板
+- `docs/conventions/templates/` 是候选模板库：按完整编码项目、轻量脚本/demo、非编码资料项目、混合项目，以及 Java/TypeScript/Python/Go/Markdown 等类型给出默认规则。模板不会直接生效；选中的条目要整理进顶层 `docs/conventions/*.md`，再由 hook 注入。
 
 ## 依赖：接线 vs 自带
 

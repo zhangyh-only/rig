@@ -112,6 +112,13 @@ if grep -q '触发：' "$home/.codex/skills/rig-new-change/SKILL.md" \
   && grep -q '执行动作' "$home/.codex/skills/rig-review/SKILL.md"; then
   ok "rig init --codex → Codex action skills 使用调用契约描述"
 else no "rig init --codex action skills 缺少触发/边界/动作契约"; fi
+if grep -q '只报不改' "$home/.codex/skills/rig-review/SKILL.md" \
+  && grep -q 'honesty gap' "$home/.codex/skills/rig-review/SKILL.md" \
+  && grep -q '遵守度' "$home/.codex/skills/rig-review/SKILL.md" \
+  && grep -q '偏离度' "$home/.codex/skills/rig-review/SKILL.md" \
+  && grep -q '完成度' "$home/.codex/skills/rig-review/SKILL.md"; then
+  ok "rig init --codex → rig-review 带 canonical review contract"
+else no "rig init --codex rig-review 缺少 canonical review contract 锚点"; fi
 if jq -e '.plugins[] | select(.name=="rig" and .source.path=="./plugins/rig" and .policy.authentication=="ON_USE")' "$home/.agents/plugins/marketplace.json" >/dev/null 2>&1; then
   ok "rig init --codex → marketplace 已登记 rig plugin"
 else no "rig init --codex 未以 ON_USE 登记 rig plugin marketplace"; fi

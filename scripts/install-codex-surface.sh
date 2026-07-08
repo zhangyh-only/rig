@@ -46,6 +46,13 @@ write_skill(){
 
 install_action_skills(){
   base="$1"
+  review_contract_file="$here/assets/shared/review-contract.md"
+  if [ ! -f "$review_contract_file" ]; then
+    echo "✗ 缺少 canonical review contract: $review_contract_file" >&2
+    return 1
+  fi
+  review_contract="$(cat "$review_contract_file")"
+
   write_skill "$base/rig-init" "rig-init" "触发：用户要求 /rig:init、初始化、onboard 或接入当前项目；边界：这是当前项目+当前 AI 工具的接入，不是代码审查；动作：运行 rig init --codex 后 doctor。" "# Rig Init
 
 ## 触发条件
@@ -75,7 +82,7 @@ install_action_skills(){
 1. 运行 \`rig doctor \"\$PWD\"\`。如果 \`rig\` 不在 PATH 中，使用 \`~/.codex/skills/rig/bin/rig doctor \"\$PWD\"\` 或 \`~/.agents/skills/rig/bin/rig doctor \"\$PWD\"\`。
 2. 报告 hook 注册、Codex skill/action skill 状态、command surface 状态和项目验证结果。
 3. 对失败项先定位根因，再提出最小修复动作。"
-  write_skill "$base/rig-review" "rig-review" "触发：复核当前实现 / 完成度 / 偏离度 / 当前 diff；边界：不创建 change、不归档、不规划新需求；动作：对照 AGENTS/conventions/OpenSpec/plan/验证要求审查。" "# Rig Review
+  write_skill "$base/rig-review" "rig-review" "触发：复核当前实现 / 完成度 / 偏离度 / 当前 diff；边界：不创建 change、不归档、不规划新需求；动作：按 canonical review contract 审查并只报不改。" "# Rig Review
 
 ## 触发条件
 - 用户要求 \`/rig:review\`、\`rig review\`、审查当前变更、分析执行情况、检查未完成事项、复核质量风险。
@@ -87,9 +94,13 @@ install_action_skills(){
 - 不规划新需求；review 只复核当前状态。
 
 ## 执行动作
-1. 对照 \`AGENTS.md\`、\`docs/conventions/\`、OpenSpec/change、implementation plan 和本地验证要求复查。
+1. 按下面的 canonical review contract 执行，不要把 review 漂成新需求规划。
 2. 优先报告 bug、规范漂移、范围偏离、缺失测试、完成度缺口和自报/实测不一致。
-3. 条件允许时运行聚焦验证；只读审查可直接做，写入修复需按用户意图确认。"
+3. 只报不改；如果用户随后明确要求修复，再进入普通实现流程。
+
+## Canonical review contract
+
+$review_contract"
   write_skill "$base/rig-new-change" "rig-new-change" "触发：新需求 / 行为契约变化 / 接口数据流程变化；边界：不用于 review、当前 diff 复核或执行情况分析；动作：确认 openspec 后创建 proposal/tasks/spec-delta。" "# Rig New Change
 
 ## 触发条件
@@ -220,7 +231,7 @@ plugin_root="$HOME/.agents/plugins/rig"
 
 link_dir "$HOME/.codex/skills/rig"
 link_dir "$HOME/.agents/skills/rig"
-install_action_skills "$HOME/.codex/skills"
+install_action_skills "$HOME/.codex/skills" || exit 1
 cleanup_legacy_action_skills "$HOME/.agents/skills"
 
 mkdir -p "$plugin_root/.codex-plugin" "$plugin_root/commands" "$plugin_root/skills" "$plugin_root/agents"

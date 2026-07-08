@@ -53,6 +53,16 @@ assert_grep '不适用 / 待补' "$commands" "COMMANDS 要求显式标注未同�
 assert_grep '交付说明约束' "$commands" "COMMANDS 包含交付说明约束"
 assert_grep '新项目怎么用' "$commands" "COMMANDS 要求说明新项目怎么用"
 assert_grep '已接入 rig 的项目怎么更新' "$commands" "COMMANDS 要求说明已接入项目怎么更新"
+assert_grep 'assets/shared/review-contract.md' "$commands" "COMMANDS 指向 canonical review contract"
+
+echo
+echo "== canonical review contract =="
+review_contract="$ROOT/assets/shared/review-contract.md"
+assert_grep '只报不改' "$review_contract" "review contract 固定只报不改"
+assert_grep 'honesty gap' "$review_contract" "review contract 固定 honesty gap"
+assert_grep '遵守度' "$review_contract" "review contract 固定遵守度"
+assert_grep '偏离度' "$review_contract" "review contract 固定偏离度"
+assert_grep '完成度' "$review_contract" "review contract 固定完成度"
 
 echo
 echo "== README rollout usage =="
@@ -134,6 +144,11 @@ assert_grep '新需求 / 行为契约变化 / 接口数据流程变化' "$home/.
 assert_grep '不用于 review' "$home/.codex/skills/rig-new-change/SKILL.md" "rig-new-change 描述排除 review"
 assert_grep '复核当前实现 / 完成度 / 偏离度 / 当前 diff' "$home/.codex/skills/rig-review/SKILL.md" "rig-review 描述聚焦当前实现复核"
 assert_grep '不创建 change' "$home/.codex/skills/rig-review/SKILL.md" "rig-review 描述排除新建 change"
+assert_grep '只报不改' "$home/.codex/skills/rig-review/SKILL.md" "rig-review 包含只报不改"
+assert_grep 'honesty gap' "$home/.codex/skills/rig-review/SKILL.md" "rig-review 包含 honesty gap"
+assert_grep '### 一、遵守度' "$home/.codex/skills/rig-review/SKILL.md" "rig-review 包含遵守度输出段"
+assert_grep '### 二、偏离度' "$home/.codex/skills/rig-review/SKILL.md" "rig-review 包含偏离度输出段"
+assert_grep '### 三、完成度' "$home/.codex/skills/rig-review/SKILL.md" "rig-review 包含完成度输出段"
 assert_grep '长期架构决策原因' "$home/.codex/skills/rig-adr/SKILL.md" "rig-adr 描述聚焦长期决策原因"
 assert_grep '代码现状反扫' "$home/.codex/skills/rig-feature-spec/SKILL.md" "rig-feature-spec 描述聚焦代码现状反扫"
 

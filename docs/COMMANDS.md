@@ -11,6 +11,7 @@
 | 项目命令模板 | `assets/project-layer/.claude/commands/rig/*.md` | `/rig:init` 后落到项目里的变更、归档、ADR、review、learn 等命令。 |
 | Codex action skills | `scripts/install-codex-surface.sh` 生成到 `~/.codex/skills/rig-*` | Codex 候选列表里的 `Rig Init`、`Rig Review` 等操作入口。 |
 | Codex plugin command surface | `assets/codex-plugin/commands/*.md` | Codex 本地 plugin 暴露的 `/rig:init`、`/rig:doctor`。 |
+| Review contract | `assets/shared/review-contract.md` | `code-reviewer` / `Rig Review` 共用的审查合同，固定只报不改、遵守度、偏离度、完成度和 honesty gap。 |
 
 ## 多工具同步约束
 
@@ -78,7 +79,7 @@
 | `Rig` | 用户要求安装、迁移、更新 rig；扫描缺失；新机器接入；给项目 onboard。 | 不替代日常代码 review；不要把项目专属内容凭模板伪造出来。 | 按 `reference/manifest.md` 探测、补缺、合并不覆盖，最后验证并报告。 |
 | `Rig Init` / `/rig:init` | 当前项目要在当前 AI 工具中接入 rig；用户说初始化、onboard、接入工作流。 | 同仓库在 Claude 跑过，不代表 Codex 已完成；换 AI 工具仍要跑一次。不是代码质量审查入口。 | 运行工具侧初始化，如 Codex 中 `rig init --codex "$PWD"`；补项目骨架；归并既有规范；推导项目命令；最后跑 `rig doctor "$PWD"`。 |
 | `Rig Doctor` / `/rig:doctor` | 用户要求检查 rig 是否健康；hook、skill、plugin、verify-local、jq、会话生效有疑问。 | 先诊断，不要一上来重装或改文件；联网安装、破坏性修改前必须确认。 | 运行 `rig doctor "$PWD"`；报告通过/失败；失败项先定位根因，再给最小修复动作。 |
-| `Rig Review` / `/rig:review` | 复核当前实现、完成度、偏离度、当前 diff、执行情况或质量风险。 | 不创建 change；不归档；不把新需求规划混进 review。 | 对照 `AGENTS.md`、`docs/conventions/`、OpenSpec、plan 和验证要求审查；优先报 bug、偏离、缺测、完成度缺口。 |
+| `Rig Review` / `/rig:review` | 复核当前实现、完成度、偏离度、当前 diff、执行情况或质量风险。 | 不创建 change；不归档；不把新需求规划混进 review；只报不改。 | 按 `assets/shared/review-contract.md` 对照 `AGENTS.md`、`docs/conventions/`、OpenSpec、plan 和验证要求审查；优先报 bug、偏离、缺测、完成度缺口和 honesty gap。 |
 | `Rig New Change` / `/rig:new-change` | 新需求、行为契约变化、接口数据流程变化、验收标准变化，需要创建 OpenSpec change。 | 不用于 review 当前 diff、分析执行情况、检查没做完什么；没有明确创建意图时先分流。 | 先确认 openspec 是否启用；有边界地检查目录和 CLI；再创建 proposal/tasks/spec-delta 骨架。 |
 | `Rig Archive Change` / `/rig:archive-change` | 用户明确要归档、关闭、完成某个 openspec change。 | tasks 未完成、验证未过、change id 不明确时不归档。 | 定位 change；检查 tasks 和 validate；执行 archive；提醒 ADR/feature-spec 后续沉淀。 |
 | `Rig ADR` / `/rig:adr` | Graph 编排边界、跨域技术选型、难回退架构选择，需要记录长期架构决策原因。 | 不用于普通实现说明；不要替用户编造决策理由。 | 基于模板创建 `docs/adr/NNNN-*.md`，记录 context/decision/consequences/alternatives，并更新索引。 |
