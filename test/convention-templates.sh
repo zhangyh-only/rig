@@ -46,5 +46,21 @@ case "$out" in
   *) ok "模板库保持参考态，不被 hook 直接注入" ;;
 esac
 
+proj="$tmp/project"
+home="$tmp/home-init"
+mkdir -p "$home/.cursor" "$proj"
+HOME="$home" "$ROOT/bin/rig" init --cursor "$proj" >/dev/null
+if [ -d "$proj/docs/conventions/templates" ]; then
+  no "rig init 不应把模板库复制进目标项目" "$(find "$proj/docs/conventions/templates" -type f | sort)"
+else
+  ok "rig init 只铺顶层 conventions 骨架，不复制模板库"
+fi
+
+if [ -f "$proj/docs/conventions/code.md" ] && [ -f "$proj/docs/conventions/structure.md" ] && [ -f "$proj/docs/conventions/README.md" ]; then
+  ok "rig init 仍铺顶层 conventions 骨架"
+else
+  no "rig init 缺少顶层 conventions 骨架" "$(find "$proj/docs/conventions" -maxdepth 2 -type f 2>/dev/null | sort)"
+fi
+
 rm -rf "$tmp"
 exit "$fail"

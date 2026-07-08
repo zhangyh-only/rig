@@ -224,13 +224,14 @@ purpose: 把"用什么 skill / 工作流怎么运转 / 新封装什么能力"的
 
 ### 10.3 基础模板矩阵
 
-项目接入时可以带一套候选规范模板，但模板不是项目真相。正确链路是：
+rig 可以内置一套候选规范模板，但模板不是项目真相，也不应整体复制进项目。正确链路是：
 
-1. 先按项目类型选模板：完整编码项目、轻量脚本/demo、非编码资料项目、代码与资料混合项目。
-2. 再按实际语言或资料类型选模板：Java、TypeScript、Python、Go、Markdown/知识库等。
-3. 将适用条目提升到顶层 `docs/conventions/*.md`，由 hook 注入；未选中的模板留在子目录中，不进入活跃上下文。
-4. 项目专属规则必须来自代码、已有规范或用户确认，不能凭模板伪造模块边界、业务术语或验收命令。
-5. 能机器判定的条目接入 `scripts/lint-one.sh`、语言检查器或 CI；需判断的条目留给生成时注入和收尾 review。
+1. 先读取项目已有规范和事实来源：`AGENTS.md`、`CLAUDE.md`、`.cursorrules`、`.cursor/rules/`、Copilot instructions、README 规范段、构建文件和目录结构；已有项目内容优先级最高。
+2. 再按项目类型选择可参考的模板：完整编码项目、轻量脚本/demo、非编码资料项目、代码与资料混合项目。
+3. 再按实际语言或资料类型选择候选条目：Java、TypeScript、Python、Go、Markdown/知识库等。
+4. 将适用条目整合到顶层 `docs/conventions/*.md`，由 hook 注入；未选中的模板不落到项目活跃规范里。
+5. 项目专属规则必须来自代码、已有规范或用户确认，不能凭模板伪造模块边界、业务术语或验收命令。
+6. 能机器判定的条目接入 `scripts/lint-one.sh`、语言检查器或 CI；需判断的条目留给生成时注入和收尾 review。
 
 这套模板矩阵服务的是跨 AI 工具底座：`AGENTS.md`、`docs/conventions/`、`scripts/lint-one.sh`、`scripts/verify-local.sh` 是项目单源；Claude Code、Codex、Cursor 等只是消费这些单源的适配层。
 

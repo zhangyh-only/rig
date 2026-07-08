@@ -191,6 +191,7 @@
 |---|---|---|---|---|---|
 | docs-conventions-dir-exists `[ready]` | docs/conventions/ 存在（inject-conventions 固定注入路径） | test -d docs/conventions && ls *.md | template-copy | 拷 docs/conventions 模板（README+code+structure） | true |
 | docs-conventions-readme-buckets-guide `[ready]` | README.md 三桶分流元指南 | test -f docs/conventions/README.md 且含三桶表 | template-copy | 拷 README.md 模板 | true |
+| conventions-template-library-internal `[ready]` | rig 内置规范候选模板库，用于按项目语言/框架辅助归并，不整体复制进目标项目 | test -f assets/project-layer/docs/conventions/templates/README.md && ! test -d <proj>/docs/conventions/templates | derive-from-code | 初始化时先读项目已有规范，再按项目类型和语言/框架参考候选模板，只把适用条目整合进顶层 docs/conventions/*.md | true |
 | scattered-conventions-not-collected | 散落规范（README/wiki/注释/PR/旧规则文件）尚未归集到权威单源 | 存在散落来源但 docs/conventions 为空/占位 | organize-existing | 逐条归并进 docs/conventions/{code,structure}.md 打 A/B/C 桶，原位置保留加指针 | false |
 | conventions-still-placeholder | code.md/structure.md 非占位、有真实规则、每条标桶（空壳=AI 守了个寂寞） | grep '<.*>'/'按本项目实际填写' 仍占位→incomplete | author-with-user | 优先 organize-existing；无则 derive-from-code 给候选规则→选择/确认题让用户定稿打桶标 | false |
 | conventions-bucket-a-has-linter-binding | A 桶规则真正编译进 linter/架构测试（未编译则降级 B 桶，丢硬保证） | 标 [A 桶] 条数>0 但检查器配置缺失/未接 lint-one | author-with-user | 逐条映射到本语言检查器规则项，生成/合并配置接进 lint-one+CI | false |

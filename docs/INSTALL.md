@@ -127,8 +127,10 @@ mkdir -p $P/scripts; cp -n assets/project-layer/scripts/*.sh $P/scripts/ 2>/dev/
 # slash 命令 + 红线
 mkdir -p $P/.claude && cp -rn assets/project-layer/.claude/commands $P/.claude/
 cp -n assets/project-layer/.claude/protected-paths.txt $P/.claude/ 2>/dev/null
-# docs：规范三桶（把既有规范归并进来）+ ADR + plan 模板
-mkdir -p $P/docs && cp -rn assets/project-layer/docs/conventions assets/project-layer/docs/adr assets/project-layer/docs/plans $P/docs/
+# docs：规范三桶骨架（templates 不复制进项目）+ ADR + plan 模板
+mkdir -p $P/docs/conventions
+for f in assets/project-layer/docs/conventions/*.md; do cp -n "$f" $P/docs/conventions/ 2>/dev/null; done
+mkdir -p $P/docs && cp -rn assets/project-layer/docs/adr assets/project-layer/docs/plans $P/docs/
 # 格式底层
 cp -n assets/project-layer/.editorconfig $P/ 2>/dev/null
 # openspec（按需，非预研才装）：真包是 @fission-ai/openspec（裸 openspec 是 2019 空壳！）
