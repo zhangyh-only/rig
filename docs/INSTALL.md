@@ -116,30 +116,18 @@ rig init --codex <项目根>
 
 注意：`rig init` 的机械层可以在终端跑，但推荐在**当前要使用的 AI 工具**里跑 `/rig:init`。同一个项目如果从 Claude Code 切到 Codex，也要在 Codex 里再跑一次 `/rig:init`，因为项目骨架虽然可复用，工具侧 hook/skill/command 入口和信任状态必须按当前工具会话补齐。
 
-### 项目接入（每个项目一次，注意合并）
+### 历史手工接入（仅故障排查，不推荐）
+
+旧版本曾建议逐文件复制 `assets/project-layer`。这条路径会绕过项目既有规范分析、语言/框架识别、幂等合并和工具侧接线，已经不再作为项目初始化方式。
+
+如果 `rig` 尚未加入 `PATH`，直接调用仓库里的 CLI，仍然走完整初始化流程：
+
 ```bash
-P=<项目根>
-# AGENTS.md / CLAUDE.md：不存在才拷；已存在则把模板里缺的章节【手动并入】，勿覆盖
-[ -f $P/AGENTS.md ] || cp assets/project-layer/AGENTS.md $P/AGENTS.md
-[ -f $P/CLAUDE.md ] || cp assets/project-layer/CLAUDE.md $P/CLAUDE.md   # 内容仅 @AGENTS.md
-# 脚本：语言适配器 + L0 自验证骨架（用 ; 分隔——macOS 上 cp -n 跳过已存在文件会返 1，用 && 会短路掉 chmod）
-mkdir -p $P/scripts; cp -n assets/project-layer/scripts/*.sh $P/scripts/ 2>/dev/null; chmod +x $P/scripts/*.sh
-# slash 命令 + 红线
-mkdir -p $P/.claude && cp -rn assets/project-layer/.claude/commands $P/.claude/
-cp -n assets/project-layer/.claude/protected-paths.txt $P/.claude/ 2>/dev/null
-# docs：规范三桶骨架（templates 不复制进项目）+ ADR + plan 模板
-mkdir -p $P/docs/conventions
-for f in assets/project-layer/docs/conventions/*.md; do cp -n "$f" $P/docs/conventions/ 2>/dev/null; done
-mkdir -p $P/docs && cp -rn assets/project-layer/docs/adr assets/project-layer/docs/plans $P/docs/
-# 格式底层
-cp -n assets/project-layer/.editorconfig $P/ 2>/dev/null
-# openspec（按需，非预研才装）：真包是 @fission-ai/openspec（裸 openspec 是 2019 空壳！）
-npm i -g @fission-ai/openspec            # 缺则装；联网装全局包，按需
-openspec init --tools none --force $P    # 非交互；1.4.1 生成 config.yaml；已初始化则跳过
-mkdir -p $P/openspec/changes && cp -rn assets/project-layer/openspec/changes/_template $P/openspec/changes/
-# 接好本语言 linter（checkstyle.xml/.eslintrc/...）并在 CI 设 required check
-# 注意：完整清单以 reference/manifest.md 为准；AI 辅助路径会自动按 manifest 补齐
+/path/to/rig/bin/rig init <项目根>
+/path/to/rig/bin/rig doctor <项目根>
 ```
+
+如果 CLI 本身无法执行，先按报错修复 shell、`jq` 或文件权限，再重跑初始化。不要用整套模板复制代替初始化；仍无法恢复时，按 [reference/manifest.md](../reference/manifest.md) 逐项诊断，并保留项目已有文件。
 
 ---
 

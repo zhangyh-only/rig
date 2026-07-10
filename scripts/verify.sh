@@ -1,6 +1,14 @@
 #!/usr/bin/env bash
-# 安装后自检 —— 把 smoke 测试固化。用法：verify.sh [project-dir]（默认当前目录）
+# 安装后自检 —— 把 smoke 测试固化。用法：verify.sh [project-dir]（默认当前目录；rig 包根默认检查项目模板）
 proj="${1:-$PWD}"
+self_root="$(cd "$(dirname "$0")/.." && pwd)"
+if [ -d "$proj" ]; then
+  proj="$(cd "$proj" && pwd)"
+fi
+if [ "$proj" = "$self_root" ] && [ ! -f "$proj/AGENTS.md" ]; then
+  proj="$self_root/assets/project-layer"
+  echo "ℹ 检测到 rig 包根目录，改为验证项目模板: $proj"
+fi
 hooks="$HOME/.claude/hooks"
 fail=0
 
@@ -79,9 +87,9 @@ if [ -d "$HOME/.codex" ] || [ -d "$HOME/.agents/plugins/rig" ]; then
     echo "  ⚠ Codex agents skill 未注册到 ~/.agents/skills/rig"
   fi
   if [ -f "$HOME/.agents/plugins/rig/.codex-plugin/plugin.json" ] && [ -f "$HOME/.agents/plugins/rig/commands/init.md" ] && [ -f "$HOME/.agents/plugins/rig/commands/doctor.md" ]; then
-    echo "  ✓ Codex /rig:* command surface 已安装"
+    echo "  ✓ Codex plugin init/doctor command surface 已安装"
   else
-    echo "  ⚠ Codex /rig:* command surface 未安装"
+    echo "  ⚠ Codex plugin init/doctor command surface 未安装"
   fi
   action_missing=0
   action_duplicate=0

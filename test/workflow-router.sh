@@ -64,6 +64,13 @@ assert_grep '遵守度' "$review_contract" "review contract 固定遵守度"
 assert_grep '偏离度' "$review_contract" "review contract 固定偏离度"
 assert_grep '完成度' "$review_contract" "review contract 固定完成度"
 
+claude_reviewer="$ROOT/assets/dotfiles-layer/agents/code-reviewer.md"
+assert_grep '只报不改' "$claude_reviewer" "Claude code-reviewer 保持只报不改"
+assert_grep 'honesty gap' "$claude_reviewer" "Claude code-reviewer 保持 honesty gap"
+assert_grep '遵守度' "$claude_reviewer" "Claude code-reviewer 保持遵守度"
+assert_grep '偏离度' "$claude_reviewer" "Claude code-reviewer 保持偏离度"
+assert_grep '完成度' "$claude_reviewer" "Claude code-reviewer 保持完成度"
+
 echo
 echo "== README rollout usage =="
 readme="$ROOT/README.md"
@@ -73,7 +80,7 @@ assert_grep '已接入 rig 的项目' "$readme" "README 说明已接入项目使
 assert_grep 'rig doctor' "$readme" "README 说明用 doctor 检查"
 assert_grep '自动补齐' "$readme" "README 说明已接入项目自动补齐"
 forbidden_router_docs="$tmp_root/forbidden-router-docs.txt"
-if rg -n '手动合并|如需合并请手动|手工拼模板' "$readme" "$commands" "$ROOT/assets/project-layer/AGENTS.md" "$ROOT/docs/INSTALL.md" "$ROOT/scripts/bootstrap.sh" > "$forbidden_router_docs"; then
+if rg -n '手动合并|手动并入|如需合并请手动|手工拼模板|cp assets/project-layer' "$readme" "$commands" "$ROOT/assets/project-layer/AGENTS.md" "$ROOT/docs/INSTALL.md" "$ROOT/scripts/bootstrap.sh" > "$forbidden_router_docs"; then
   no "Workflow Router 文档/脚本不应要求用户手动合并模板"
   sed 's/^/    /' "$forbidden_router_docs"
 else
@@ -132,6 +139,24 @@ if [ "$rc" -ne 0 ] && printf '%s' "$bad_out" | grep -q 'Workflow Router'; then
   ok "check-workflow-router 拒绝缺少契约的 AGENTS.md"
 else
   no "check-workflow-router 未拒绝缺少契约的 AGENTS.md（rc=${rc-} out=${bad_out-}）"
+fi
+
+echo
+echo "== rig package self verification =="
+verify_home="$tmp_root/verify-home"
+verify_seed_project="$tmp_root/verify-seed-project"
+mkdir -p "$verify_home/.claude" "$verify_home/.codex" "$verify_seed_project"
+HOME="$verify_home" "$ROOT/bin/rig" init "$verify_seed_project" >/dev/null
+verify_out="$(HOME="$verify_home" bash "$ROOT/scripts/verify.sh" "$ROOT" 2>&1)"; rc=$?
+if [ "$rc" -eq 0 ] && printf '%s' "$verify_out" | grep -q "$ROOT/assets/project-layer/AGENTS.md"; then
+  ok "verify.sh 检测 rig 包根时改查 assets/project-layer"
+else
+  no "verify.sh 未正确验证 rig 包自身（rc=${rc-} out=${verify_out-}）"
+fi
+if printf '%s' "$verify_out" | grep -q 'Codex plugin init/doctor command surface 已安装'; then
+  ok "verify.sh 准确说明 plugin command 仅含 init/doctor"
+else
+  no "verify.sh 的 plugin command surface 文案仍然过泛"
 fi
 
 echo
